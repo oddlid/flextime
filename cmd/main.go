@@ -12,20 +12,20 @@ import (
 
 // Variables meant to be set in Makefile and passed to the linker
 var (
-	VERSION    string
-	BUILD_DATE string
-	COMMIT_ID  string
+	Version   string
+	BuildDate string
+	CommitID  string
 )
 
 func getBuildVersion() string {
 	var v, c string
-	if VERSION != "" {
-		v = VERSION
+	if Version != "" {
+		v = Version
 	} else {
 		v = "v-UNDEF"
 	}
-	if COMMIT_ID != "" {
-		c = COMMIT_ID
+	if CommitID != "" {
+		c = CommitID
 	} else {
 		c = "00000000"
 	}
@@ -34,18 +34,18 @@ func getBuildVersion() string {
 
 func getCompiledDate() time.Time {
 	var compiledTime time.Time
-	if BUILD_DATE != "" {
-		t, err := time.Parse(time.RFC3339, BUILD_DATE)
+	if BuildDate != "" {
+		t, err := time.Parse(time.RFC3339, BuildDate)
 		if err != nil {
 			log.Debug().
-				Str("BUILD_DATE", BUILD_DATE).
+				Str("BuildDate", BuildDate).
 				Msg("Invalid date format, using time.Now()")
 			compiledTime = time.Now()
 		} else {
 			compiledTime = t
 		}
 	} else {
-		log.Debug().Msg("BUILD_DATE not set, using time.Now()")
+		log.Debug().Msg("BuildDate not set, using time.Now()")
 		compiledTime = time.Now()
 	}
 	return compiledTime
@@ -68,7 +68,9 @@ func entryPointAdd(c *cli.Context) error {
 	if c.Bool("debug") {
 		log.Debug().Msg("We have access to global flags even in subcommands")
 	}
-	getDBFile(c)
+	if err := getDBFile(c); err != nil {
+		return err
+	}
 
 	date := c.Timestamp("date")
 	log.Debug().Msgf("Date: %s", date)
@@ -148,15 +150,15 @@ func main() {
 					},
 				},
 			},
-			{
-				Name:    "",
-				Aliases: []string{""},
-				Usage:   "",
-				Action:  nil,
-				Flags:   []cli.Flag{
-					//
-				},
-			},
+			//{
+			//	Name:    "",
+			//	Aliases: []string{""},
+			//	Usage:   "",
+			//	Action:  nil,
+			//	Flags:   []cli.Flag{
+			//		//
+			//	},
+			//},
 		},
 	}
 

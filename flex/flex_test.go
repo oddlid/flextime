@@ -13,12 +13,12 @@ func TestNewFlexDB(t *testing.T) {
 	if assert.NotNil(t, db, "We should get a *flexDB here") {
 		assert.IsType(
 			t,
-			(*flexDB)(nil),
+			(*FlexDB)(nil),
 			db,
 		)
 		assert.IsType(
 			t,
-			customers{},
+			Customers{},
 			db.Customers,
 		)
 		assert.Equal(
@@ -35,7 +35,7 @@ func TestNewFlexDB(t *testing.T) {
 }
 
 func TestGetTotalFlexForEntries(t *testing.T) {
-	fe := flexEntries{
+	fe := FlexEntries{
 		{Date: time.Now(), Amount: 1 * time.Hour},
 		{Date: time.Now(), Amount: 30 * time.Minute},
 		{Date: time.Now(), Amount: -30 * time.Minute},
@@ -48,7 +48,7 @@ func TestGetTotalFlexForEntries(t *testing.T) {
 }
 
 func TestFlexEntriesLen(t *testing.T) {
-	fe := flexEntries{
+	fe := FlexEntries{
 		{Date: time.Now(), Amount: 1 * time.Hour},
 		{Date: time.Now(), Amount: 30 * time.Minute},
 		{Date: time.Now(), Amount: -30 * time.Minute},
@@ -62,12 +62,12 @@ func TestFlexEntriesLen(t *testing.T) {
 
 func TestCustomerGetFlexEntry(t *testing.T) {
 	today := time.Now()
-	fes := flexEntries{
+	fes := FlexEntries{
 		{Date: today.Add(-48 * time.Hour), Amount: 1 * time.Hour},
 		{Date: today.Add(-24 * time.Hour), Amount: 30 * time.Minute},
 		{Date: today.Add(24 * time.Hour), Amount: -30 * time.Minute},
 	}
-	c := customer{
+	c := Customer{
 		Name:        "MyCompany",
 		FlexEntries: fes,
 	}
@@ -107,12 +107,12 @@ func TestCustomerGetFlexEntry(t *testing.T) {
 
 func TestCustomerSetFlexEntry(t *testing.T) {
 	today := time.Now()
-	fes := flexEntries{
+	fes := FlexEntries{
 		{Date: today.Add(-48 * time.Hour), Amount: 1 * time.Hour},
 		{Date: today.Add(-24 * time.Hour), Amount: 30 * time.Minute},
 		{Date: today.Add(24 * time.Hour), Amount: -30 * time.Minute},
 	}
-	c := &customer{
+	c := &Customer{
 		Name:        "MyCompany",
 		FlexEntries: fes,
 	}
@@ -126,10 +126,10 @@ func TestCustomerSetFlexEntry(t *testing.T) {
 	ok = c.setFlexEntry(*fes[2], false)
 	assert.False(t, ok)
 
-	ok = c.setFlexEntry(flexEntry{Date: today, Amount: 30 * time.Minute}, false)
+	ok = c.setFlexEntry(FlexEntry{Date: today, Amount: 30 * time.Minute}, false)
 	assert.True(t, ok)
 
-	ok = c.setFlexEntry(flexEntry{Date: today, Amount: 15 * time.Minute}, true)
+	ok = c.setFlexEntry(FlexEntry{Date: today, Amount: 15 * time.Minute}, true)
 	assert.True(t, ok)
 
 	assert.Equal(
@@ -143,14 +143,29 @@ func TestFlexDBAddCustomer(t *testing.T) {
 	fileName := "flexdb.json"
 	db := NewFlexDB(fileName)
 
-	c := db.addCustomer("Customer1")
-	assert.NotNil(t, c)
+	c1, err1 := db.addCustomer("Customer1")
+	assert.NotNil(t, c1)
+	assert.NoError(t, err1)
 
-	c = db.addCustomer("Customer2")
-	assert.NotNil(t, c)
+	c2, err2 := db.addCustomer("Customer2")
+	assert.NotNil(t, c2)
+	assert.NoError(t, err2)
 
-	c = db.addCustomer("custOMer1")
-	assert.Nil(t, c)
+	c3, err3 := db.addCustomer("custOMer1")
+	if assert.NotNil(t, c3) {
+		assert.Equal(
+			t,
+			c1,
+			c3,
+		)
+	}
+	if assert.Error(t, err3) {
+		assert.Equal(
+			t,
+			"customer Customer1 already exists",
+			err3.Error(),
+		)
+	}
 
 	assert.Equal(
 		t,
@@ -159,16 +174,23 @@ func TestFlexDBAddCustomer(t *testing.T) {
 	)
 }
 
+func TestFlexDBGetTotalFlexForCustomerWhenNoCustomerExists(t *testing.T) {
+	db := NewFlexDB("flex.json")
+	totalFlex, err := db.GetTotalFlexForCustomer("customer1")
+	assert.Equal(t, time.Duration(0), totalFlex)
+	assert.Error(t, err)
+}
+
 func TestFlexDBGetTotalFlexForCustomer(t *testing.T) {
 	today := time.Now()
-	fes := flexEntries{
+	fes := FlexEntries{
 		{Date: today.Add(-48 * time.Hour), Amount: 1 * time.Hour},
 		{Date: today.Add(-24 * time.Hour), Amount: 30 * time.Minute},
 		{Date: today.Add(24 * time.Hour), Amount: -30 * time.Minute},
 	}
-	db := &flexDB{
+	db := &FlexDB{
 		FileName: "flex.json",
-		Customers: customers{
+		Customers: Customers{
 			{Name: "Customer1", FlexEntries: fes},
 		},
 	}
@@ -182,14 +204,20 @@ func TestFlexDBGetTotalFlexForCustomer(t *testing.T) {
 	)
 }
 
+func TestFlexDBGetTotalFlexForAllCustomersWhenNoCustomersExist(t *testing.T) {
+	db := NewFlexDB("flex.json")
+	totalFlex := db.GetTotalFlexForAllCustomers()
+	assert.Equal(t, time.Duration(0), totalFlex)
+}
+
 func TestFlexDBGetTotalFlexForAllCustomers(t *testing.T) {
 	today := time.Now()
-	db := &flexDB{
+	db := &FlexDB{
 		FileName: "flex.json",
-		Customers: customers{
+		Customers: Customers{
 			{
 				Name: "Customer1",
-				FlexEntries: flexEntries{
+				FlexEntries: FlexEntries{
 					{
 						Date:   today.Add(-24 * time.Hour),
 						Amount: 1 * time.Second,
@@ -202,7 +230,7 @@ func TestFlexDBGetTotalFlexForAllCustomers(t *testing.T) {
 			},
 			{
 				Name: "Customer2",
-				FlexEntries: flexEntries{
+				FlexEntries: FlexEntries{
 					{
 						Date:   today.Add(-24 * time.Hour),
 						Amount: 1 * time.Second,
@@ -224,20 +252,38 @@ func TestFlexDBGetTotalFlexForAllCustomers(t *testing.T) {
 	)
 }
 
+func TestFlexDBSetFlexForCustomerNoOverwrite(t *testing.T) {
+	today := time.Now()
+	overwrite := false
+	fes := FlexEntries{
+		{Date: today, Amount: 1 * time.Hour},
+	}
+	db := &FlexDB{
+		FileName: "flex.json",
+		Customers: Customers{
+			{Name: "Customer1", FlexEntries: fes},
+		},
+	}
+	err := db.SetFlexForCustomer("customer1", today, 30*time.Minute, overwrite)
+	assert.Error(t, err)
+}
+
 func TestFlexDBSetFlexForCustomer(t *testing.T) {
 	today := time.Now()
-	fes := flexEntries{
+	overwrite := true
+	fes := FlexEntries{
 		{Date: today.Add(-48 * time.Hour), Amount: 1 * time.Hour},
 		{Date: today.Add(-24 * time.Hour), Amount: 30 * time.Minute},
 		{Date: today.Add(24 * time.Hour), Amount: -30 * time.Minute},
 	}
-	db := &flexDB{
+	db := &FlexDB{
 		FileName: "flex.json",
-		Customers: customers{
+		Customers: Customers{
 			{Name: "Customer1", FlexEntries: fes},
 		},
 	}
-	db.SetFlexForCustomer("customer1", today.Add(24*time.Hour), 30*time.Minute)
+	err := db.SetFlexForCustomer("customer1", today.Add(24*time.Hour), 30*time.Minute, overwrite)
+	assert.NoError(t, err)
 	totalFlex, err := db.GetTotalFlexForCustomer("custoMEr1")
 	assert.NoError(t, err)
 	assert.Equal(
@@ -246,7 +292,8 @@ func TestFlexDBSetFlexForCustomer(t *testing.T) {
 		totalFlex,
 	)
 
-	db.SetFlexForCustomer("customer1", today.Add(48*time.Hour), 30*time.Minute)
+	err = db.SetFlexForCustomer("customer1", today.Add(48*time.Hour), 30*time.Minute, overwrite)
+	assert.NoError(t, err)
 	totalFlex, err = db.GetTotalFlexForCustomer("custoMEr1")
 	assert.NoError(t, err)
 	assert.Equal(
@@ -255,7 +302,8 @@ func TestFlexDBSetFlexForCustomer(t *testing.T) {
 		totalFlex,
 	)
 
-	db.SetFlexForCustomer("customer2", today, 1*time.Second)
+	err = db.SetFlexForCustomer("customer2", today, 1*time.Second, overwrite)
+	assert.NoError(t, err)
 	totalFlex, err = db.GetTotalFlexForCustomer("customer2")
 	assert.NoError(t, err)
 	assert.Equal(

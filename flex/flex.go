@@ -8,29 +8,29 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-type flexEntry struct {
+type FlexEntry struct {
 	Date   time.Time     `json:"date"`
 	Amount time.Duration `json:"amount"`
 }
 
-type flexEntries []*flexEntry
+type FlexEntries []*FlexEntry
 
-type customer struct {
+type Customer struct {
 	Name        string      `json:"customer_name"`
-	FlexEntries flexEntries `json:"flex_entries"`
+	FlexEntries FlexEntries `json:"flex_entries"`
 }
 
-type customers []*customer
+type Customers []*Customer
 
-type flexDB struct {
+type FlexDB struct {
 	FileName  string    `json:"-"`
-	Customers customers `json:"customers"`
+	Customers Customers `json:"customers"`
 }
 
-func NewFlexDB(fileName string) *flexDB {
-	return &flexDB{
+func NewFlexDB(fileName string) *FlexDB {
+	return &FlexDB{
 		FileName:  fileName,
-		Customers: make(customers, 0),
+		Customers: make(Customers, 0),
 	}
 }
 
@@ -38,7 +38,7 @@ func NewFlexDB(fileName string) *flexDB {
 //	*fes = append(*fes, fe)
 //}
 
-func (fes flexEntries) getTotalFlex() time.Duration {
+func (fes FlexEntries) getTotalFlex() time.Duration {
 	var total time.Duration
 	for _, e := range fes {
 		total += e.Amount
@@ -46,15 +46,15 @@ func (fes flexEntries) getTotalFlex() time.Duration {
 	return total
 }
 
-func (fes flexEntries) Len() int {
+func (fes FlexEntries) Len() int {
 	return len(fes)
 }
 
-func (c customer) getTotalFlex() time.Duration {
+func (c Customer) getTotalFlex() time.Duration {
 	return c.FlexEntries.getTotalFlex()
 }
 
-func (c *customer) getFlexEntry(date time.Time) (*flexEntry, error) {
+func (c *Customer) getFlexEntry(date time.Time) (*FlexEntry, error) {
 	for _, fe := range c.FlexEntries {
 		if fe.Date.Equal(date) {
 			return fe, nil
@@ -63,7 +63,7 @@ func (c *customer) getFlexEntry(date time.Time) (*flexEntry, error) {
 	return nil, fmt.Errorf("no flexentry for date: %v", date)
 }
 
-func (c *customer) setFlexEntry(fe flexEntry, overwrite bool) bool {
+func (c *Customer) setFlexEntry(fe FlexEntry, overwrite bool) bool {
 	foundAtIndex := -1
 	for idx := range c.FlexEntries {
 		if fe.Date.Equal(c.FlexEntries[idx].Date) {
@@ -72,21 +72,10 @@ func (c *customer) setFlexEntry(fe flexEntry, overwrite bool) bool {
 		}
 	}
 	if foundAtIndex == -1 {
-		//log.Debug().
-		//	Str("customer_name", c.Name).
-		//	Time("date", fe.Date).
-		//	Dur("amount", fe.Amount).
-		//	Msg("Adding new FlexEntry")
 		c.FlexEntries = append(c.FlexEntries, &fe)
 		return true
 	} else {
 		if overwrite {
-			//log.Debug().
-			//	Str("customer_name", c.Name).
-			//	Time("date", fe.Date).
-			//	Dur("amount", fe.Amount).
-			//	Int("index", foundAtIndex).
-			//	Msg("Overwriting existing FlexEntry")
 			c.FlexEntries[foundAtIndex] = &fe
 			return true
 		}
@@ -98,11 +87,11 @@ func (c *customer) setFlexEntry(fe flexEntry, overwrite bool) bool {
 //	return c.setFlexEntry(fe, false)
 //}
 
-func (cs customers) Len() int {
+func (cs Customers) Len() int {
 	return len(cs)
 }
 
-func (fdb *flexDB) getCustomer(name string) (*customer, error) {
+func (fdb *FlexDB) getCustomer(name string) (*Customer, error) {
 	for _, c := range fdb.Customers {
 		if strings.EqualFold(name, c.Name) {
 			return c, nil
@@ -111,22 +100,19 @@ func (fdb *flexDB) getCustomer(name string) (*customer, error) {
 	return nil, fmt.Errorf("no such customer: %q", name)
 }
 
-func (fdb *flexDB) addCustomer(name string) *customer {
-	if _, err := fdb.getCustomer(name); err == nil {
-		//log.Debug().
-		//	Str("customer_name", name).
-		//	Msg("Customer already exists")
-		return nil // customer exists
+func (fdb *FlexDB) addCustomer(name string) (*Customer, error) {
+	if c, err := fdb.getCustomer(name); err == nil {
+		return c, fmt.Errorf("customer %s already exists", c.Name)
 	}
-	c := &customer{
+	c := &Customer{
 		Name:        name,
-		FlexEntries: make(flexEntries, 0),
+		FlexEntries: make(FlexEntries, 0),
 	}
 	fdb.Customers = append(fdb.Customers, c)
-	return c
+	return c, nil
 }
 
-func (fdb *flexDB) GetTotalFlexForCustomer(customerName string) (time.Duration, error) {
+func (fdb *FlexDB) GetTotalFlexForCustomer(customerName string) (time.Duration, error) {
 	c, err := fdb.getCustomer(customerName)
 	if err != nil {
 		return 0, err
@@ -134,7 +120,7 @@ func (fdb *flexDB) GetTotalFlexForCustomer(customerName string) (time.Duration, 
 	return c.getTotalFlex(), nil
 }
 
-func (fdb *flexDB) GetTotalFlexForAllCustomers() time.Duration {
+func (fdb *FlexDB) GetTotalFlexForAllCustomers() time.Duration {
 	if fdb.Customers.Len() == 0 {
 		return 0
 	}
@@ -145,17 +131,13 @@ func (fdb *flexDB) GetTotalFlexForAllCustomers() time.Duration {
 	return total
 }
 
-func (fdb *flexDB) SetFlexForCustomer(customerName string, date time.Time, amount time.Duration) {
-	c, err := fdb.getCustomer(customerName)
+func (fdb *FlexDB) SetFlexForCustomer(customerName string, date time.Time, amount time.Duration, overwrite bool) error {
+	c, err := fdb.addCustomer(customerName)
 	if err != nil {
-		//log.Debug().
-		//	Str("customer_name", customerName).
-		//	Msg("No such customer, creating...")
-		c = fdb.addCustomer(customerName)
+		log.Debug().Msg(err.Error())
 	}
-	if !c.setFlexEntry(flexEntry{Date: date, Amount: amount}, true) {
-		log.Error().
-			Str("customer_name", customerName).
-			Msg("Failed to add flex")
+	if !c.setFlexEntry(FlexEntry{Date: date, Amount: amount}, overwrite) {
+		return fmt.Errorf("failed to add %v flex on %v for customer %s", amount, date, customerName)
 	}
+	return nil
 }
