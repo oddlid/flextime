@@ -2,38 +2,88 @@ package flex
 
 import (
 	"bufio"
+	"encoding/json"
+	"errors"
+	"io"
 	"os"
-
-	"github.com/rs/zerolog/log"
 )
 
-func NewFlexDB(fileName string) *FlexDB {
-	db, err := FlexDBFromFile(fileName)
-	if err != nil {
-		log.Error().Err(err).Send()
-		log.Info().Str("filename", fileName).Msg("Returning new, empty FlexDB")
-		return &FlexDB{
-			FileName:  fileName,
-			Customers: make(Customers, 0),
-		}
+var (
+	ErrInvalidJSONInput = errors.New("Invalid JSON input")
+	ErrEmptyDB          = errors.New("Empty flex Database")
+)
+
+func NewFlexDB() *FlexDB {
+	return &FlexDB{
+		Customers: make(Customers, 0),
 	}
-	// We don't want the filename saved in the JSON file, since that could lead to problems,
-	// say if you rename the file, but don't edit the file and change the filename field.
-	// Then it would be saved back to whatever was set in the file, and not the same name
-	// as it was loaded from.
-	db.FileName = fileName
-	return db
 }
 
-func FlexDBFromFile(fileName string) (*FlexDB, error) {
+func OpenFileForReading(fileName string) (*os.File, error) {
+	if fileName == "-" {
+		return os.Stdin, nil
+	}
 	file, err := os.Open(fileName)
 	if err != nil {
 		return nil, err
 	}
-	defer file.Close()
-	reader := bufio.NewReader(file)
+	return file, nil
+}
+
+func OpenFileForWriting(fileName string) (*os.File, error) {
+	if fileName == "-" {
+		return os.Stdout, nil
+	}
+	file, err := os.Create(fileName)
+	if err != nil {
+		return nil, err
+	}
+	return file, nil
+}
+
+func EncodeFlexDB(db *FlexDB, w io.Writer) error {
+	return json.NewEncoder(w).Encode(db)
+}
+
+func DecodeFlexDB(r io.Reader) (*FlexDB, error) {
 	db := &FlexDB{}
-	err = db.Decode(reader)
+	err := json.NewDecoder(r).Decode(db)
+	if err != nil && !errors.Is(err, io.EOF) {
+		return nil, err
+	}
+	//bytes, err := io.ReadAll(r)
+	//if err != nil {
+	//	log.Error().Err(err).Msg("Error from io.ReadAll()")
+	//	return nil, err
+	//}
+	//err = json.Unmarshal(bytes, db)
+	//if err != nil {
+	//	log.Error().Err(err).Msg("Error from json.Unmarshal()")
+	//	return nil, err
+	//}
+
+	if db.IsEmpty() {
+		return nil, ErrEmptyDB
+	}
+	return db, nil
+}
+
+func FlexDBToFile(db *FlexDB, file *os.File) error {
+	//writer := bufio.NewWriter(file)
+	//if err := EncodeFlexDB(db, writer); err != nil {
+	//	return err
+	//}
+	//writer.Flush()
+	//return nil
+	return EncodeFlexDB(db, file)
+}
+
+// FlexDBFromFile will try to decode the JSON from the file into a FlexDB struct pointer.
+// It's important to call file.Seek(0, 0) before passing it to this function, if you've
+// written to the file after opening it.
+func FlexDBFromFile(file *os.File) (*FlexDB, error) {
+	reader := bufio.NewReader(file)
+	db, err := DecodeFlexDB(reader)
 	if err != nil {
 		return nil, err
 	}

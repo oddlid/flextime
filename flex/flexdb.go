@@ -1,15 +1,17 @@
 package flex
 
 import (
-	"bufio"
-	"encoding/json"
+	"errors"
 	"fmt"
-	"io"
-	"os"
 	"strings"
 	"time"
 
 	"github.com/rs/zerolog/log"
+)
+
+var (
+	ErrNoSuchCustomer = errors.New("no such customer")
+	ErrCustomerExists = errors.New("customer already exists")
 )
 
 type FlexDB struct {
@@ -17,31 +19,13 @@ type FlexDB struct {
 	Customers Customers `json:"customers"`
 }
 
-func (db *FlexDB) Save() error {
-	if db.FileName == "" {
-		return fmt.Errorf("FlexDB has no filename to save to")
+func (fdb *FlexDB) IsEmpty() bool {
+	dbStr := fmt.Sprintf("%#v", fdb)
+	log.Debug().Str("db", dbStr).Msg("DB passed to IsEmpty")
+	if fdb.Customers == nil || fdb.Customers.Len() == 0 {
+		return true
 	}
-	file, err := os.Create(db.FileName)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-	writer := bufio.NewWriter(file)
-	err = db.Encode(writer)
-	if err != nil {
-		return err
-	}
-	writer.Flush()
-	log.Info().Str("filename", db.FileName).Msg("Saved FlexDB to file")
-	return nil
-}
-
-func (db *FlexDB) Encode(w io.Writer) error {
-	return json.NewEncoder(w).Encode(db)
-}
-
-func (db *FlexDB) Decode(r io.Reader) error {
-	return json.NewDecoder(r).Decode(db)
+	return false
 }
 
 func (fdb *FlexDB) getCustomer(name string) (*Customer, error) {
@@ -50,12 +34,12 @@ func (fdb *FlexDB) getCustomer(name string) (*Customer, error) {
 			return c, nil
 		}
 	}
-	return nil, fmt.Errorf("no such customer: %q", name)
+	return nil, fmt.Errorf("%w: %q", ErrNoSuchCustomer, name)
 }
 
 func (fdb *FlexDB) addCustomer(name string) (*Customer, error) {
 	if c, err := fdb.getCustomer(name); err == nil {
-		return c, fmt.Errorf("customer %s already exists", c.Name)
+		return c, fmt.Errorf("%w: %s", ErrCustomerExists, c.Name)
 	}
 	c := &Customer{
 		Name:        name,

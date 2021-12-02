@@ -8,8 +8,7 @@ import (
 )
 
 func TestFlexDBAddCustomer(t *testing.T) {
-	fileName := "flexdb.json"
-	db := NewFlexDB(fileName)
+	db := NewFlexDB()
 
 	c1, err1 := db.addCustomer("Customer1")
 	assert.NotNil(t, c1)
@@ -30,7 +29,7 @@ func TestFlexDBAddCustomer(t *testing.T) {
 	if assert.Error(t, err3) {
 		assert.Equal(
 			t,
-			"customer Customer1 already exists",
+			"customer already exists: Customer1",
 			err3.Error(),
 		)
 	}
@@ -43,7 +42,7 @@ func TestFlexDBAddCustomer(t *testing.T) {
 }
 
 func TestFlexDBGetTotalFlexForCustomerWhenNoCustomerExists(t *testing.T) {
-	db := NewFlexDB("flex.json")
+	db := NewFlexDB()
 	totalFlex, err := db.GetTotalFlexForCustomer("customer1")
 	assert.Equal(t, time.Duration(0), totalFlex)
 	assert.Error(t, err)
@@ -73,7 +72,7 @@ func TestFlexDBGetTotalFlexForCustomer(t *testing.T) {
 }
 
 func TestFlexDBGetTotalFlexForAllCustomersWhenNoCustomersExist(t *testing.T) {
-	db := NewFlexDB("flex.json")
+	db := NewFlexDB()
 	totalFlex := db.GetTotalFlexForAllCustomers()
 	assert.Equal(t, time.Duration(0), totalFlex)
 }
@@ -185,3 +184,43 @@ func TestFlexDBSetFlexForCustomer(t *testing.T) {
 		totalFlex,
 	)
 }
+
+//func TestFlexDBSaveWithNoFilename(t *testing.T) {
+//	db := &FlexDB{}
+//	err := db.Save()
+//	if assert.Error(t, err) {
+//		assert.Equal(
+//			t,
+//			"FlexDB has no filename to save to",
+//			err.Error(),
+//		)
+//	}
+//}
+//
+//func TestFlexDBSaveWithInvalidFilename(t *testing.T) {
+//	filename := "/invalid/path/to/file.json"
+//	db := &FlexDB{FileName: filename}
+//	err := db.Save()
+//	if assert.Error(t, err) {
+//		assert.Equal(
+//			t,
+//			fmt.Sprintf("open %s: no such file or directory", filename),
+//			err.Error(),
+//		)
+//	}
+//}
+//
+//func TestFlexDBSave(t *testing.T) {
+//	file, err := os.CreateTemp("", "flextime")
+//	if err != nil {
+//		t.Errorf("Failed to create temp file: %v", err)
+//		return
+//	}
+//	if err = file.Close(); err != nil {
+//		t.Errorf("%v", err)
+//	}
+//	defer os.Remove(file.Name())
+//	db := &FlexDB{FileName: file.Name()}
+//	err = db.Save()
+//	assert.NoError(t, err)
+//}
