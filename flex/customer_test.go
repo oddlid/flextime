@@ -21,7 +21,7 @@ func TestCustomerGetTotalFlexWhenFlexEntriesIsNil(t *testing.T) {
 
 func TestCustomerGetFlexEntry(t *testing.T) {
 	today := time.Now()
-	fes := FlexEntries{
+	fes := Entries{
 		{Date: today.Add(-48 * time.Hour), Amount: 1 * time.Hour},
 		{Date: today.Add(-24 * time.Hour), Amount: 30 * time.Minute},
 		{Date: today.Add(24 * time.Hour), Amount: -30 * time.Minute},
@@ -66,7 +66,7 @@ func TestCustomerGetFlexEntry(t *testing.T) {
 
 func TestCustomerSetFlexEntry(t *testing.T) {
 	today := time.Now()
-	fes := FlexEntries{
+	fes := Entries{
 		{Date: today.Add(-48 * time.Hour), Amount: 1 * time.Hour},
 		{Date: today.Add(-24 * time.Hour), Amount: 30 * time.Minute},
 		{Date: today.Add(24 * time.Hour), Amount: -30 * time.Minute},
@@ -85,10 +85,10 @@ func TestCustomerSetFlexEntry(t *testing.T) {
 	ok = c.setFlexEntry(*fes[2], false)
 	assert.False(t, ok)
 
-	ok = c.setFlexEntry(FlexEntry{Date: today, Amount: 30 * time.Minute}, false)
+	ok = c.setFlexEntry(Entry{Date: today, Amount: 30 * time.Minute}, false)
 	assert.True(t, ok)
 
-	ok = c.setFlexEntry(FlexEntry{Date: today, Amount: 15 * time.Minute}, true)
+	ok = c.setFlexEntry(Entry{Date: today, Amount: 15 * time.Minute}, true)
 	assert.True(t, ok)
 
 	assert.Equal(
@@ -168,7 +168,7 @@ func TestCustomerPrintWithFlexEntries(t *testing.T) {
 	name := "Customer1"
 	today := time.Now()
 	amount := 1 * time.Nanosecond
-	customer := Customer{Name: name, FlexEntries: FlexEntries{{Date: today, Amount: amount}}}
+	customer := Customer{Name: name, FlexEntries: Entries{{Date: today, Amount: amount}}}
 	builder := strings.Builder{}
 	expected := fmt.Sprintf(
 		"%s%s:\n%s%s : %v\n",

@@ -141,7 +141,7 @@ func TestFlexDBFromFile(t *testing.T) {
 	if assert.NotNil(t, db) {
 		assert.IsType(
 			t,
-			(*FlexDB)(nil),
+			(*DB)(nil),
 			db,
 		)
 		assert.Equal(
@@ -155,7 +155,6 @@ func TestFlexDBFromFile(t *testing.T) {
 			db.Customers[0].Name,
 		)
 	}
-
 }
 
 func TestFlexDBFromFileStdInWithInvalidData(t *testing.T) {
@@ -183,7 +182,7 @@ func TestFlexDBFromFileStdInWithInvalidData(t *testing.T) {
 }
 
 func TestFlexDBToFileStdOut(t *testing.T) {
-	db := &FlexDB{
+	db := &DB{
 		FileName:  "flex.json",
 		Customers: make(Customers, 0),
 	}
@@ -217,14 +216,14 @@ func TestFlexDBToFileExpectError(t *testing.T) {
 	}
 	file.Close()
 	defer os.Remove(file.Name())
-	err = FlexDBToFile(&FlexDB{}, file)
+	err = FlexDBToFile(&DB{}, file)
 	if assert.Error(t, err) {
 		t.Logf("%s", err.Error())
 	}
 }
 
 func TestFlexDBToFile(t *testing.T) {
-	db := &FlexDB{
+	db := &DB{
 		FileName:  "flexdb.json",
 		Customers: make(Customers, 0),
 	}
@@ -247,7 +246,6 @@ func TestFlexDBToFile(t *testing.T) {
 		t.Error(err)
 	}
 	file.Close()
-
 }
 
 func TestDecodeFlexDBWithInvalidJSON(t *testing.T) {
@@ -258,91 +256,16 @@ func TestDecodeFlexDBWithInvalidJSON(t *testing.T) {
 	assert.Error(t, err)
 }
 
-//func TestNewFlexDBWithInvalidFile(t *testing.T) {
-//	filename := "/invalid/path/to/flex.json"
-//	cwd, err := os.Getwd()
-//	if err != nil {
-//		t.Errorf("%v", err)
-//	}
-//	t.Logf("Current working directory: %s", cwd)
-//	db := NewFlexDB(filename)
-//	if assert.NotNil(t, db, "We should get a *flexDB here") {
-//		assert.IsType(
-//			t,
-//			(*FlexDB)(nil),
-//			db,
-//		)
-//		assert.IsType(
-//			t,
-//			Customers{},
-//			db.Customers,
-//		)
-//		assert.Equal(
-//			t,
-//			0,
-//			db.Customers.Len(),
-//		)
-//		assert.Equal(
-//			t,
-//			filename,
-//			db.FileName,
-//		)
-//	}
-//}
-
-//func TestNewFlexDBWithValidFile(t *testing.T) {
-//	file, err := os.CreateTemp("", "flextime")
-//	if err != nil {
-//		t.Errorf("%v", err)
-//	}
-//	jsonDB := `
-//		{
-//			"customers": [
-//				{
-//					"customer_name": "Customer1",
-//					"flex_entries": [
-//						{
-//							"date": "2021-11-27T22:52:56+01:00",
-//							"amount": 1
-//						}
-//					]
-//				}
-//			]
-//		}
-//	`
-//	_, err = file.Write([]byte(jsonDB))
-//	if err != nil {
-//		t.Errorf("%v", err)
-//	}
-//	if err = file.Close(); err != nil {
-//		t.Errorf("%v", err)
-//	}
-//	defer os.Remove(file.Name())
-//
-//	db := NewFlexDB(file.Name())
-//	assert.NotNil(t, db)
-//	assert.Equal(
-//		t,
-//		file.Name(),
-//		db.FileName,
-//	)
-//	assert.Equal(
-//		t,
-//		"Customer1",
-//		db.Customers[0].Name,
-//	)
-//}
-
 func TestEncodeFlexDB(t *testing.T) {
 	today := time.Now()
 	jsonDate, err := json.Marshal(today)
 	if err != nil {
 		t.Errorf("Unable to generate JSON date: %v", err)
 	}
-	fe := FlexEntry{Date: today, Amount: 1 * time.Nanosecond}
-	c1 := Customer{Name: "Customer1", FlexEntries: FlexEntries{&fe}}
-	c2 := Customer{Name: "Customer2", FlexEntries: FlexEntries{&fe}}
-	db := &FlexDB{FileName: "flex.json", Customers: Customers{&c1, &c2}}
+	fe := Entry{Date: today, Amount: 1 * time.Nanosecond}
+	c1 := Customer{Name: "Customer1", FlexEntries: Entries{&fe}}
+	c2 := Customer{Name: "Customer2", FlexEntries: Entries{&fe}}
+	db := &DB{FileName: "flex.json", Customers: Customers{&c1, &c2}}
 
 	expected := fmt.Sprintf(
 		"{%q:[{%q:%q,%q:[{%q:%s,%q:1}]},{%q:%q,%q:[{%q:%s,%q:1}]}]}\n",

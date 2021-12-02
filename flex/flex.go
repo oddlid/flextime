@@ -9,12 +9,12 @@ import (
 )
 
 var (
-	ErrInvalidJSONInput = errors.New("Invalid JSON input")
-	ErrEmptyDB          = errors.New("Empty flex Database")
+	ErrInvalidJSONInput = errors.New("invalid JSON input")
+	ErrEmptyDB          = errors.New("empty flex Database")
 )
 
-func NewFlexDB() *FlexDB {
-	return &FlexDB{
+func NewFlexDB() *DB {
+	return &DB{
 		Customers: make(Customers, 0),
 	}
 }
@@ -41,12 +41,12 @@ func OpenFileForWriting(fileName string) (*os.File, error) {
 	return file, nil
 }
 
-func EncodeFlexDB(db *FlexDB, w io.Writer) error {
+func EncodeFlexDB(db *DB, w io.Writer) error {
 	return json.NewEncoder(w).Encode(db)
 }
 
-func DecodeFlexDB(r io.Reader) (*FlexDB, error) {
-	db := &FlexDB{}
+func DecodeFlexDB(r io.Reader) (*DB, error) {
+	db := &DB{}
 	err := json.NewDecoder(r).Decode(db)
 	if err != nil && !errors.Is(err, io.EOF) {
 		return nil, err
@@ -68,7 +68,7 @@ func DecodeFlexDB(r io.Reader) (*FlexDB, error) {
 	return db, nil
 }
 
-func FlexDBToFile(db *FlexDB, file *os.File) error {
+func FlexDBToFile(db *DB, file *os.File) error {
 	//writer := bufio.NewWriter(file)
 	//if err := EncodeFlexDB(db, writer); err != nil {
 	//	return err
@@ -81,7 +81,7 @@ func FlexDBToFile(db *FlexDB, file *os.File) error {
 // FlexDBFromFile will try to decode the JSON from the file into a FlexDB struct pointer.
 // It's important to call file.Seek(0, 0) before passing it to this function, if you've
 // written to the file after opening it.
-func FlexDBFromFile(file *os.File) (*FlexDB, error) {
+func FlexDBFromFile(file *os.File) (*DB, error) {
 	reader := bufio.NewReader(file)
 	db, err := DecodeFlexDB(reader)
 	if err != nil {

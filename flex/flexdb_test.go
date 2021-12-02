@@ -50,12 +50,12 @@ func TestFlexDBGetTotalFlexForCustomerWhenNoCustomerExists(t *testing.T) {
 
 func TestFlexDBGetTotalFlexForCustomer(t *testing.T) {
 	today := time.Now()
-	fes := FlexEntries{
+	fes := Entries{
 		{Date: today.Add(-48 * time.Hour), Amount: 1 * time.Hour},
 		{Date: today.Add(-24 * time.Hour), Amount: 30 * time.Minute},
 		{Date: today.Add(24 * time.Hour), Amount: -30 * time.Minute},
 	}
-	db := &FlexDB{
+	db := &DB{
 		FileName: "flex.json",
 		Customers: Customers{
 			{Name: "Customer1", FlexEntries: fes},
@@ -79,12 +79,12 @@ func TestFlexDBGetTotalFlexForAllCustomersWhenNoCustomersExist(t *testing.T) {
 
 func TestFlexDBGetTotalFlexForAllCustomers(t *testing.T) {
 	today := time.Now()
-	db := &FlexDB{
+	db := &DB{
 		FileName: "flex.json",
 		Customers: Customers{
 			{
 				Name: "Customer1",
-				FlexEntries: FlexEntries{
+				FlexEntries: Entries{
 					{
 						Date:   today.Add(-24 * time.Hour),
 						Amount: 1 * time.Second,
@@ -97,7 +97,7 @@ func TestFlexDBGetTotalFlexForAllCustomers(t *testing.T) {
 			},
 			{
 				Name: "Customer2",
-				FlexEntries: FlexEntries{
+				FlexEntries: Entries{
 					{
 						Date:   today.Add(-24 * time.Hour),
 						Amount: 1 * time.Second,
@@ -122,10 +122,10 @@ func TestFlexDBGetTotalFlexForAllCustomers(t *testing.T) {
 func TestFlexDBSetFlexForCustomerNoOverwrite(t *testing.T) {
 	today := time.Now()
 	overwrite := false
-	fes := FlexEntries{
+	fes := Entries{
 		{Date: today, Amount: 1 * time.Hour},
 	}
-	db := &FlexDB{
+	db := &DB{
 		FileName: "flex.json",
 		Customers: Customers{
 			{Name: "Customer1", FlexEntries: fes},
@@ -138,12 +138,12 @@ func TestFlexDBSetFlexForCustomerNoOverwrite(t *testing.T) {
 func TestFlexDBSetFlexForCustomer(t *testing.T) {
 	today := time.Now()
 	overwrite := true
-	fes := FlexEntries{
+	fes := Entries{
 		{Date: today.Add(-48 * time.Hour), Amount: 1 * time.Hour},
 		{Date: today.Add(-24 * time.Hour), Amount: 30 * time.Minute},
 		{Date: today.Add(24 * time.Hour), Amount: -30 * time.Minute},
 	}
-	db := &FlexDB{
+	db := &DB{
 		FileName: "flex.json",
 		Customers: Customers{
 			{Name: "Customer1", FlexEntries: fes},

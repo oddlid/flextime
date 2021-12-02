@@ -8,29 +8,29 @@ import (
 	"time"
 )
 
-type FlexEntrySortOrder uint8
+type EntrySortOrder uint8
 
 const (
 	shortDateFormat = "2006-01-02"
 )
 
 const (
-	FlexEntrySortByDateAscending FlexEntrySortOrder = iota
+	FlexEntrySortByDateAscending EntrySortOrder = iota
 	FlexEntrySortByDateDescending
 	FlexEntrySortByAmountAscending
 	FlexEntrySortByAmountDescending
 )
 
-type FlexEntry struct {
+type Entry struct {
 	Date   time.Time     `json:"date"`
 	Amount time.Duration `json:"amount"`
 }
 
-type FlexEntries []*FlexEntry
-type FlexEntriesByDate FlexEntries
-type FlexEntriesByAmount FlexEntries
+type Entries []*Entry
+type EntriesByDate Entries
+type EntriesByAmount Entries
 
-func (flexEntries FlexEntries) getTotalFlex() time.Duration {
+func (flexEntries Entries) getTotalFlex() time.Duration {
 	var total time.Duration
 	for _, e := range flexEntries {
 		total += e.Amount
@@ -38,28 +38,28 @@ func (flexEntries FlexEntries) getTotalFlex() time.Duration {
 	return total
 }
 
-func (flexEntries FlexEntries) Len() int {
+func (flexEntries Entries) Len() int {
 	return len(flexEntries)
 }
 
-func (flexEntry FlexEntry) Print(w io.Writer) {
+func (flexEntry Entry) Print(w io.Writer) {
 	fmt.Fprintf(w, "%s : %v", flexEntry.Date.Format(shortDateFormat), flexEntry.Amount)
 }
 
-func (flexEntries FlexEntries) Sort(sortOrder FlexEntrySortOrder) {
+func (flexEntries Entries) Sort(sortOrder EntrySortOrder) {
 	switch sortOrder {
 	case FlexEntrySortByDateAscending:
-		sort.Sort(FlexEntriesByDate(flexEntries))
+		sort.Sort(EntriesByDate(flexEntries))
 	case FlexEntrySortByDateDescending:
-		sort.Sort(sort.Reverse(FlexEntriesByDate(flexEntries)))
+		sort.Sort(sort.Reverse(EntriesByDate(flexEntries)))
 	case FlexEntrySortByAmountAscending:
-		sort.Sort(FlexEntriesByAmount(flexEntries))
+		sort.Sort(EntriesByAmount(flexEntries))
 	case FlexEntrySortByAmountDescending:
-		sort.Sort(sort.Reverse(FlexEntriesByAmount(flexEntries)))
+		sort.Sort(sort.Reverse(EntriesByAmount(flexEntries)))
 	}
 }
 
-func (flexEntries FlexEntries) Print(w io.Writer, indentString string, indentLevel int) {
+func (flexEntries Entries) Print(w io.Writer, indentString string, indentLevel int) {
 	prefix := strings.Repeat(indentString, indentLevel)
 	for _, fe := range flexEntries {
 		fmt.Fprintf(w, "%s", prefix)
@@ -68,31 +68,31 @@ func (flexEntries FlexEntries) Print(w io.Writer, indentString string, indentLev
 	}
 }
 
-func (flexEntries FlexEntries) PrintSorted(w io.Writer, indentString string, indentLevel int, sortOrder FlexEntrySortOrder) {
+func (flexEntries Entries) PrintSorted(w io.Writer, indentString string, indentLevel int, sortOrder EntrySortOrder) {
 	flexEntries.Sort(sortOrder)
 	flexEntries.Print(w, indentString, indentLevel)
 }
 
-func (flexEntriesByDate FlexEntriesByDate) Len() int {
+func (flexEntriesByDate EntriesByDate) Len() int {
 	return len(flexEntriesByDate)
 }
 
-func (flexEntriesByDate FlexEntriesByDate) Swap(i, j int) {
+func (flexEntriesByDate EntriesByDate) Swap(i, j int) {
 	flexEntriesByDate[i], flexEntriesByDate[j] = flexEntriesByDate[j], flexEntriesByDate[i]
 }
 
-func (flexEntriesByDate FlexEntriesByDate) Less(i, j int) bool {
+func (flexEntriesByDate EntriesByDate) Less(i, j int) bool {
 	return flexEntriesByDate[i].Date.Before(flexEntriesByDate[j].Date)
 }
 
-func (flexEntriesByAmount FlexEntriesByAmount) Len() int {
+func (flexEntriesByAmount EntriesByAmount) Len() int {
 	return len(flexEntriesByAmount)
 }
 
-func (flexEntriesByAmount FlexEntriesByAmount) Swap(i, j int) {
+func (flexEntriesByAmount EntriesByAmount) Swap(i, j int) {
 	flexEntriesByAmount[i], flexEntriesByAmount[j] = flexEntriesByAmount[j], flexEntriesByAmount[i]
 }
 
-func (flexEntriesByAmount FlexEntriesByAmount) Less(i, j int) bool {
+func (flexEntriesByAmount EntriesByAmount) Less(i, j int) bool {
 	return flexEntriesByAmount[i].Amount < flexEntriesByAmount[j].Amount
 }

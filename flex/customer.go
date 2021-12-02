@@ -16,8 +16,8 @@ const (
 )
 
 type Customer struct {
-	Name        string      `json:"customer_name"`
-	FlexEntries FlexEntries `json:"flex_entries"`
+	Name        string  `json:"customer_name"`
+	FlexEntries Entries `json:"flex_entries"`
 }
 
 type Customers []*Customer
@@ -30,7 +30,7 @@ func (customer Customer) getTotalFlex() time.Duration {
 	return customer.FlexEntries.getTotalFlex()
 }
 
-func (customer *Customer) getFlexEntry(date time.Time) (*FlexEntry, error) {
+func (customer *Customer) getFlexEntry(date time.Time) (*Entry, error) {
 	for _, fe := range customer.FlexEntries {
 		if fe.Date.Equal(date) {
 			return fe, nil
@@ -39,7 +39,7 @@ func (customer *Customer) getFlexEntry(date time.Time) (*FlexEntry, error) {
 	return nil, fmt.Errorf("no flexentry for date: %v", date)
 }
 
-func (customer *Customer) setFlexEntry(fe FlexEntry, overwrite bool) bool {
+func (customer *Customer) setFlexEntry(fe Entry, overwrite bool) bool {
 	foundAtIndex := -1
 	for idx := range customer.FlexEntries {
 		if fe.Date.Equal(customer.FlexEntries[idx].Date) {
@@ -50,11 +50,10 @@ func (customer *Customer) setFlexEntry(fe FlexEntry, overwrite bool) bool {
 	if foundAtIndex == -1 {
 		customer.FlexEntries = append(customer.FlexEntries, &fe)
 		return true
-	} else {
-		if overwrite {
-			customer.FlexEntries[foundAtIndex] = &fe
-			return true
-		}
+	}
+	if overwrite {
+		customer.FlexEntries[foundAtIndex] = &fe
+		return true
 	}
 	return false
 }
@@ -80,14 +79,14 @@ func (customersByName CustomersByName) Swap(i, j int) {
 }
 
 func (customersByName CustomersByName) Less(i, j int) bool {
-	i_name := customersByName[i].Name
-	j_name := customersByName[j].Name
-	i_nameLower := strings.ToLower(i_name)
-	j_nameLower := strings.ToLower(j_name)
-	if i_nameLower == j_nameLower {
-		return i_name < j_name
+	iName := customersByName[i].Name
+	jName := customersByName[j].Name
+	iNameLower := strings.ToLower(iName)
+	jNameLower := strings.ToLower(jName)
+	if iNameLower == jNameLower {
+		return iName < jName
 	}
-	return i_nameLower < j_nameLower
+	return iNameLower < jNameLower
 }
 
 func (customers Customers) Sort(sortOrder CustomerSortOrder) {
