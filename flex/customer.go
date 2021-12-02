@@ -16,43 +16,43 @@ const (
 )
 
 type Customer struct {
-	Name        string  `json:"customer_name"`
-	FlexEntries Entries `json:"flex_entries"`
+	Name    string  `json:"customer_name"`
+	Entries Entries `json:"flex_entries"`
 }
 
 type Customers []*Customer
 type CustomersByName Customers
 
 func (customer Customer) getTotalFlex() time.Duration {
-	if customer.FlexEntries == nil {
+	if customer.Entries == nil {
 		return time.Duration(0)
 	}
-	return customer.FlexEntries.getTotalFlex()
+	return customer.Entries.getTotalFlex()
 }
 
-func (customer *Customer) getFlexEntry(date time.Time) (*Entry, error) {
-	for _, fe := range customer.FlexEntries {
-		if fe.Date.Equal(date) {
-			return fe, nil
+func (customer *Customer) getEntry(date time.Time) (*Entry, error) {
+	for _, entry := range customer.Entries {
+		if entry.Date.Equal(date) {
+			return entry, nil
 		}
 	}
-	return nil, fmt.Errorf("no flexentry for date: %v", date)
+	return nil, fmt.Errorf("no entry for date: %v", date)
 }
 
-func (customer *Customer) setFlexEntry(fe Entry, overwrite bool) bool {
+func (customer *Customer) setEntry(entry Entry, overwrite bool) bool {
 	foundAtIndex := -1
-	for idx := range customer.FlexEntries {
-		if fe.Date.Equal(customer.FlexEntries[idx].Date) {
+	for idx := range customer.Entries {
+		if entry.Date.Equal(customer.Entries[idx].Date) {
 			foundAtIndex = idx
 			break
 		}
 	}
 	if foundAtIndex == -1 {
-		customer.FlexEntries = append(customer.FlexEntries, &fe)
+		customer.Entries = append(customer.Entries, &entry)
 		return true
 	}
 	if overwrite {
-		customer.FlexEntries[foundAtIndex] = &fe
+		customer.Entries[foundAtIndex] = &entry
 		return true
 	}
 	return false
@@ -61,8 +61,8 @@ func (customer *Customer) setFlexEntry(fe Entry, overwrite bool) bool {
 func (customer Customer) Print(w io.Writer, indentString string, indentLevel int) {
 	prefix := strings.Repeat(indentString, indentLevel)
 	fmt.Fprintf(w, "%s%s:\n", prefix, customer.Name)
-	if customer.FlexEntries != nil {
-		customer.FlexEntries.Print(w, indentString, indentLevel+1)
+	if customer.Entries != nil {
+		customer.Entries.Print(w, indentString, indentLevel+1)
 	}
 }
 

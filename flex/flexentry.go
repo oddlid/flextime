@@ -15,10 +15,10 @@ const (
 )
 
 const (
-	FlexEntrySortByDateAscending EntrySortOrder = iota
-	FlexEntrySortByDateDescending
-	FlexEntrySortByAmountAscending
-	FlexEntrySortByAmountDescending
+	EntrySortByDateAscending EntrySortOrder = iota
+	EntrySortByDateDescending
+	EntrySortByAmountAscending
+	EntrySortByAmountDescending
 )
 
 type Entry struct {
@@ -30,69 +30,69 @@ type Entries []*Entry
 type EntriesByDate Entries
 type EntriesByAmount Entries
 
-func (flexEntries Entries) getTotalFlex() time.Duration {
+func (entries Entries) getTotalFlex() time.Duration {
 	var total time.Duration
-	for _, e := range flexEntries {
-		total += e.Amount
+	for _, entry := range entries {
+		total += entry.Amount
 	}
 	return total
 }
 
-func (flexEntries Entries) Len() int {
-	return len(flexEntries)
+func (entries Entries) Len() int {
+	return len(entries)
 }
 
-func (flexEntry Entry) Print(w io.Writer) {
-	fmt.Fprintf(w, "%s : %v", flexEntry.Date.Format(shortDateFormat), flexEntry.Amount)
+func (entry Entry) Print(w io.Writer) {
+	fmt.Fprintf(w, "%s : %v", entry.Date.Format(shortDateFormat), entry.Amount)
 }
 
-func (flexEntries Entries) Sort(sortOrder EntrySortOrder) {
+func (entries Entries) Sort(sortOrder EntrySortOrder) {
 	switch sortOrder {
-	case FlexEntrySortByDateAscending:
-		sort.Sort(EntriesByDate(flexEntries))
-	case FlexEntrySortByDateDescending:
-		sort.Sort(sort.Reverse(EntriesByDate(flexEntries)))
-	case FlexEntrySortByAmountAscending:
-		sort.Sort(EntriesByAmount(flexEntries))
-	case FlexEntrySortByAmountDescending:
-		sort.Sort(sort.Reverse(EntriesByAmount(flexEntries)))
+	case EntrySortByDateAscending:
+		sort.Sort(EntriesByDate(entries))
+	case EntrySortByDateDescending:
+		sort.Sort(sort.Reverse(EntriesByDate(entries)))
+	case EntrySortByAmountAscending:
+		sort.Sort(EntriesByAmount(entries))
+	case EntrySortByAmountDescending:
+		sort.Sort(sort.Reverse(EntriesByAmount(entries)))
 	}
 }
 
-func (flexEntries Entries) Print(w io.Writer, indentString string, indentLevel int) {
+func (entries Entries) Print(w io.Writer, indentString string, indentLevel int) {
 	prefix := strings.Repeat(indentString, indentLevel)
-	for _, fe := range flexEntries {
+	for _, entry := range entries {
 		fmt.Fprintf(w, "%s", prefix)
-		fe.Print(w)
+		entry.Print(w)
 		fmt.Fprint(w, "\n")
 	}
 }
 
-func (flexEntries Entries) PrintSorted(w io.Writer, indentString string, indentLevel int, sortOrder EntrySortOrder) {
-	flexEntries.Sort(sortOrder)
-	flexEntries.Print(w, indentString, indentLevel)
+func (entries Entries) PrintSorted(w io.Writer, indentString string, indentLevel int, sortOrder EntrySortOrder) {
+	entries.Sort(sortOrder)
+	entries.Print(w, indentString, indentLevel)
 }
 
-func (flexEntriesByDate EntriesByDate) Len() int {
-	return len(flexEntriesByDate)
+func (entriesByDate EntriesByDate) Len() int {
+	return len(entriesByDate)
 }
 
-func (flexEntriesByDate EntriesByDate) Swap(i, j int) {
-	flexEntriesByDate[i], flexEntriesByDate[j] = flexEntriesByDate[j], flexEntriesByDate[i]
+func (entriesByDate EntriesByDate) Swap(i, j int) {
+	entriesByDate[i], entriesByDate[j] = entriesByDate[j], entriesByDate[i]
 }
 
-func (flexEntriesByDate EntriesByDate) Less(i, j int) bool {
-	return flexEntriesByDate[i].Date.Before(flexEntriesByDate[j].Date)
+func (entriesByDate EntriesByDate) Less(i, j int) bool {
+	return entriesByDate[i].Date.Before(entriesByDate[j].Date)
 }
 
-func (flexEntriesByAmount EntriesByAmount) Len() int {
-	return len(flexEntriesByAmount)
+func (entriesByAmount EntriesByAmount) Len() int {
+	return len(entriesByAmount)
 }
 
-func (flexEntriesByAmount EntriesByAmount) Swap(i, j int) {
-	flexEntriesByAmount[i], flexEntriesByAmount[j] = flexEntriesByAmount[j], flexEntriesByAmount[i]
+func (entriesByAmount EntriesByAmount) Swap(i, j int) {
+	entriesByAmount[i], entriesByAmount[j] = entriesByAmount[j], entriesByAmount[i]
 }
 
-func (flexEntriesByAmount EntriesByAmount) Less(i, j int) bool {
-	return flexEntriesByAmount[i].Amount < flexEntriesByAmount[j].Amount
+func (entriesByAmount EntriesByAmount) Less(i, j int) bool {
+	return entriesByAmount[i].Amount < entriesByAmount[j].Amount
 }

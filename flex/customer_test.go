@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestCustomerGetTotalFlexWhenFlexEntriesIsNil(t *testing.T) {
+func TestCustomerGetTotalFlexWhenEntriesIsNil(t *testing.T) {
 	customer := Customer{Name: "Customer1"}
 	totalFlex := customer.getTotalFlex()
 	assert.Equal(
@@ -19,82 +19,82 @@ func TestCustomerGetTotalFlexWhenFlexEntriesIsNil(t *testing.T) {
 	)
 }
 
-func TestCustomerGetFlexEntry(t *testing.T) {
+func TestCustomerGetEntry(t *testing.T) {
 	today := time.Now()
-	fes := Entries{
+	entries := Entries{
 		{Date: today.Add(-48 * time.Hour), Amount: 1 * time.Hour},
 		{Date: today.Add(-24 * time.Hour), Amount: 30 * time.Minute},
 		{Date: today.Add(24 * time.Hour), Amount: -30 * time.Minute},
 	}
-	c := Customer{
-		Name:        "MyCompany",
-		FlexEntries: fes,
+	customer := Customer{
+		Name:    "MyCompany",
+		Entries: entries,
 	}
 
-	fe, err := c.getFlexEntry(today)
-	assert.Nil(t, fe)
+	entry, err := customer.getEntry(today)
+	assert.Nil(t, entry)
 	assert.Error(t, err)
 
-	fe, err = c.getFlexEntry(today.Add(24 * time.Hour))
+	entry, err = customer.getEntry(today.Add(24 * time.Hour))
 	assert.NoError(t, err)
-	if assert.NotNil(t, fe) {
+	if assert.NotNil(t, entry) {
 		assert.Equal(
 			t,
-			*fes[2],
-			*fe,
+			*entries[2],
+			*entry,
 		)
 	}
-	fe, err = c.getFlexEntry(today.Add(-24 * time.Hour))
+	entry, err = customer.getEntry(today.Add(-24 * time.Hour))
 	assert.NoError(t, err)
-	if assert.NotNil(t, fe) {
+	if assert.NotNil(t, entry) {
 		assert.Equal(
 			t,
-			*fes[1],
-			*fe,
+			*entries[1],
+			*entry,
 		)
 	}
-	fe, err = c.getFlexEntry(today.Add(-48 * time.Hour))
+	entry, err = customer.getEntry(today.Add(-48 * time.Hour))
 	assert.NoError(t, err)
-	if assert.NotNil(t, fe) {
+	if assert.NotNil(t, entry) {
 		assert.Equal(
 			t,
-			*fes[0],
-			*fe,
+			*entries[0],
+			*entry,
 		)
 	}
 }
 
-func TestCustomerSetFlexEntry(t *testing.T) {
+func TestCustomerSetEntry(t *testing.T) {
 	today := time.Now()
-	fes := Entries{
+	entries := Entries{
 		{Date: today.Add(-48 * time.Hour), Amount: 1 * time.Hour},
 		{Date: today.Add(-24 * time.Hour), Amount: 30 * time.Minute},
 		{Date: today.Add(24 * time.Hour), Amount: -30 * time.Minute},
 	}
-	c := &Customer{
-		Name:        "MyCompany",
-		FlexEntries: fes,
+	customer := &Customer{
+		Name:    "MyCompany",
+		Entries: entries,
 	}
 
-	ok := c.setFlexEntry(*fes[0], false)
+	ok := customer.setEntry(*entries[0], false)
 	assert.False(t, ok)
 
-	ok = c.setFlexEntry(*fes[1], false)
+	ok = customer.setEntry(*entries[1], false)
 	assert.False(t, ok)
 
-	ok = c.setFlexEntry(*fes[2], false)
+	ok = customer.setEntry(*entries[2], false)
 	assert.False(t, ok)
 
-	ok = c.setFlexEntry(Entry{Date: today, Amount: 30 * time.Minute}, false)
+	ok = customer.setEntry(Entry{Date: today, Amount: 30 * time.Minute}, false)
 	assert.True(t, ok)
 
-	ok = c.setFlexEntry(Entry{Date: today, Amount: 15 * time.Minute}, true)
+	ok = customer.setEntry(Entry{Date: today, Amount: 15 * time.Minute}, true)
 	assert.True(t, ok)
 
 	assert.Equal(
 		t,
 		75*time.Minute,
-		c.getTotalFlex(),
+		customer.getTotalFlex(),
 	)
 }
 
@@ -146,7 +146,7 @@ func TestCustomersSortDescending(t *testing.T) {
 	assert.Equal(t, c4, customers[0])
 }
 
-func TestCustomerPrintWhenFlexEntriesIsNil(t *testing.T) {
+func TestCustomerPrintWhenEntriesIsNil(t *testing.T) {
 	indentString := " "
 	indentLevel := 2
 	name := "Customer1"
@@ -162,13 +162,13 @@ func TestCustomerPrintWhenFlexEntriesIsNil(t *testing.T) {
 	)
 }
 
-func TestCustomerPrintWithFlexEntries(t *testing.T) {
+func TestCustomerPrintWithEntries(t *testing.T) {
 	indentString := " "
 	indentLevel := 2
 	name := "Customer1"
 	today := time.Now()
 	amount := 1 * time.Nanosecond
-	customer := Customer{Name: name, FlexEntries: Entries{{Date: today, Amount: amount}}}
+	customer := Customer{Name: name, Entries: Entries{{Date: today, Amount: amount}}}
 	builder := strings.Builder{}
 	expected := fmt.Sprintf(
 		"%s%s:\n%s%s : %v\n",

@@ -19,61 +19,59 @@ type DB struct {
 	Customers Customers `json:"customers"`
 }
 
-func (fdb *DB) IsEmpty() bool {
-	dbStr := fmt.Sprintf("%#v", fdb)
-	log.Debug().Str("db", dbStr).Msg("DB passed to IsEmpty")
-	if fdb.Customers == nil || fdb.Customers.Len() == 0 {
+func (db *DB) IsEmpty() bool {
+	if db.Customers == nil || db.Customers.Len() == 0 {
 		return true
 	}
 	return false
 }
 
-func (fdb *DB) getCustomer(name string) (*Customer, error) {
-	for _, c := range fdb.Customers {
-		if strings.EqualFold(name, c.Name) {
-			return c, nil
+func (db *DB) getCustomer(name string) (*Customer, error) {
+	for _, customer := range db.Customers {
+		if strings.EqualFold(name, customer.Name) {
+			return customer, nil
 		}
 	}
 	return nil, fmt.Errorf("%w: %q", ErrNoSuchCustomer, name)
 }
 
-func (fdb *DB) addCustomer(name string) (*Customer, error) {
-	if c, err := fdb.getCustomer(name); err == nil {
-		return c, fmt.Errorf("%w: %s", ErrCustomerExists, c.Name)
+func (db *DB) addCustomer(name string) (*Customer, error) {
+	if customer, err := db.getCustomer(name); err == nil {
+		return customer, fmt.Errorf("%w: %s", ErrCustomerExists, customer.Name)
 	}
-	c := &Customer{
-		Name:        name,
-		FlexEntries: make(Entries, 0),
+	customer := &Customer{
+		Name:    name,
+		Entries: make(Entries, 0),
 	}
-	fdb.Customers = append(fdb.Customers, c)
-	return c, nil
+	db.Customers = append(db.Customers, customer)
+	return customer, nil
 }
 
-func (fdb *DB) GetTotalFlexForCustomer(customerName string) (time.Duration, error) {
-	c, err := fdb.getCustomer(customerName)
+func (db *DB) GetTotalFlexForCustomer(customerName string) (time.Duration, error) {
+	customer, err := db.getCustomer(customerName)
 	if err != nil {
 		return 0, err
 	}
-	return c.getTotalFlex(), nil
+	return customer.getTotalFlex(), nil
 }
 
-func (fdb *DB) GetTotalFlexForAllCustomers() time.Duration {
-	if fdb.Customers.Len() == 0 {
+func (db *DB) GetTotalFlexForAllCustomers() time.Duration {
+	if db.Customers.Len() == 0 {
 		return 0
 	}
 	var total time.Duration
-	for _, c := range fdb.Customers {
-		total += c.getTotalFlex()
+	for _, customer := range db.Customers {
+		total += customer.getTotalFlex()
 	}
 	return total
 }
 
-func (fdb *DB) SetFlexForCustomer(customerName string, date time.Time, amount time.Duration, overwrite bool) error {
-	c, err := fdb.addCustomer(customerName)
+func (db *DB) SetFlexForCustomer(customerName string, date time.Time, amount time.Duration, overwrite bool) error {
+	customer, err := db.addCustomer(customerName)
 	if err != nil {
 		log.Debug().Msg(err.Error())
 	}
-	if !c.setFlexEntry(Entry{Date: date, Amount: amount}, overwrite) {
+	if !customer.setEntry(Entry{Date: date, Amount: amount}, overwrite) {
 		return fmt.Errorf("failed to add %v flex on %v for customer %s", amount, date, customerName)
 	}
 	return nil

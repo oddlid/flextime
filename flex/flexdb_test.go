@@ -7,8 +7,22 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestFlexDBAddCustomer(t *testing.T) {
-	db := NewFlexDB()
+func TestDBIsEmptyExpectTrue(t *testing.T) {
+	db := &DB{}
+	assert.True(t, db.IsEmpty())
+}
+
+func TestDBIsEmptyExpectFalse(t *testing.T) {
+	db := &DB{
+		Customers: Customers{
+			{Name: "Customer1"},
+		},
+	}
+	assert.False(t, db.IsEmpty())
+}
+
+func TestDBAddCustomer(t *testing.T) {
+	db := NewDB()
 
 	c1, err1 := db.addCustomer("Customer1")
 	assert.NotNil(t, c1)
@@ -41,16 +55,16 @@ func TestFlexDBAddCustomer(t *testing.T) {
 	)
 }
 
-func TestFlexDBGetTotalFlexForCustomerWhenNoCustomerExists(t *testing.T) {
-	db := NewFlexDB()
+func TestDBGetTotalFlexForCustomerWhenNoCustomerExists(t *testing.T) {
+	db := NewDB()
 	totalFlex, err := db.GetTotalFlexForCustomer("customer1")
 	assert.Equal(t, time.Duration(0), totalFlex)
 	assert.Error(t, err)
 }
 
-func TestFlexDBGetTotalFlexForCustomer(t *testing.T) {
+func TestDBGetTotalFlexForCustomer(t *testing.T) {
 	today := time.Now()
-	fes := Entries{
+	entries := Entries{
 		{Date: today.Add(-48 * time.Hour), Amount: 1 * time.Hour},
 		{Date: today.Add(-24 * time.Hour), Amount: 30 * time.Minute},
 		{Date: today.Add(24 * time.Hour), Amount: -30 * time.Minute},
@@ -58,7 +72,7 @@ func TestFlexDBGetTotalFlexForCustomer(t *testing.T) {
 	db := &DB{
 		FileName: "flex.json",
 		Customers: Customers{
-			{Name: "Customer1", FlexEntries: fes},
+			{Name: "Customer1", Entries: entries},
 		},
 	}
 
@@ -71,20 +85,20 @@ func TestFlexDBGetTotalFlexForCustomer(t *testing.T) {
 	)
 }
 
-func TestFlexDBGetTotalFlexForAllCustomersWhenNoCustomersExist(t *testing.T) {
-	db := NewFlexDB()
+func TestDBGetTotalFlexForAllCustomersWhenNoCustomersExist(t *testing.T) {
+	db := NewDB()
 	totalFlex := db.GetTotalFlexForAllCustomers()
 	assert.Equal(t, time.Duration(0), totalFlex)
 }
 
-func TestFlexDBGetTotalFlexForAllCustomers(t *testing.T) {
+func TestDBGetTotalFlexForAllCustomers(t *testing.T) {
 	today := time.Now()
 	db := &DB{
 		FileName: "flex.json",
 		Customers: Customers{
 			{
 				Name: "Customer1",
-				FlexEntries: Entries{
+				Entries: Entries{
 					{
 						Date:   today.Add(-24 * time.Hour),
 						Amount: 1 * time.Second,
@@ -97,7 +111,7 @@ func TestFlexDBGetTotalFlexForAllCustomers(t *testing.T) {
 			},
 			{
 				Name: "Customer2",
-				FlexEntries: Entries{
+				Entries: Entries{
 					{
 						Date:   today.Add(-24 * time.Hour),
 						Amount: 1 * time.Second,
@@ -119,26 +133,26 @@ func TestFlexDBGetTotalFlexForAllCustomers(t *testing.T) {
 	)
 }
 
-func TestFlexDBSetFlexForCustomerNoOverwrite(t *testing.T) {
+func TestDBSetFlexForCustomerNoOverwrite(t *testing.T) {
 	today := time.Now()
 	overwrite := false
-	fes := Entries{
+	entries := Entries{
 		{Date: today, Amount: 1 * time.Hour},
 	}
 	db := &DB{
 		FileName: "flex.json",
 		Customers: Customers{
-			{Name: "Customer1", FlexEntries: fes},
+			{Name: "Customer1", Entries: entries},
 		},
 	}
 	err := db.SetFlexForCustomer("customer1", today, 30*time.Minute, overwrite)
 	assert.Error(t, err)
 }
 
-func TestFlexDBSetFlexForCustomer(t *testing.T) {
+func TestDBSetFlexForCustomer(t *testing.T) {
 	today := time.Now()
 	overwrite := true
-	fes := Entries{
+	entries := Entries{
 		{Date: today.Add(-48 * time.Hour), Amount: 1 * time.Hour},
 		{Date: today.Add(-24 * time.Hour), Amount: 30 * time.Minute},
 		{Date: today.Add(24 * time.Hour), Amount: -30 * time.Minute},
@@ -146,7 +160,7 @@ func TestFlexDBSetFlexForCustomer(t *testing.T) {
 	db := &DB{
 		FileName: "flex.json",
 		Customers: Customers{
-			{Name: "Customer1", FlexEntries: fes},
+			{Name: "Customer1", Entries: entries},
 		},
 	}
 	err := db.SetFlexForCustomer("customer1", today.Add(24*time.Hour), 30*time.Minute, overwrite)
@@ -184,43 +198,3 @@ func TestFlexDBSetFlexForCustomer(t *testing.T) {
 		totalFlex,
 	)
 }
-
-//func TestFlexDBSaveWithNoFilename(t *testing.T) {
-//	db := &FlexDB{}
-//	err := db.Save()
-//	if assert.Error(t, err) {
-//		assert.Equal(
-//			t,
-//			"FlexDB has no filename to save to",
-//			err.Error(),
-//		)
-//	}
-//}
-//
-//func TestFlexDBSaveWithInvalidFilename(t *testing.T) {
-//	filename := "/invalid/path/to/file.json"
-//	db := &FlexDB{FileName: filename}
-//	err := db.Save()
-//	if assert.Error(t, err) {
-//		assert.Equal(
-//			t,
-//			fmt.Sprintf("open %s: no such file or directory", filename),
-//			err.Error(),
-//		)
-//	}
-//}
-//
-//func TestFlexDBSave(t *testing.T) {
-//	file, err := os.CreateTemp("", "flextime")
-//	if err != nil {
-//		t.Errorf("Failed to create temp file: %v", err)
-//		return
-//	}
-//	if err = file.Close(); err != nil {
-//		t.Errorf("%v", err)
-//	}
-//	defer os.Remove(file.Name())
-//	db := &FlexDB{FileName: file.Name()}
-//	err = db.Save()
-//	assert.NoError(t, err)
-//}
