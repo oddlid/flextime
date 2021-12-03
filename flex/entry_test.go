@@ -18,7 +18,7 @@ func TestGetTotalFlexForEntries(t *testing.T) {
 	assert.Equal(
 		t,
 		1*time.Hour,
-		entries.getTotalFlex(),
+		entries.GetTotalFlex(),
 	)
 }
 
@@ -42,7 +42,7 @@ func TestEntryPrint(t *testing.T) {
 	entry.Print(&builder)
 	assert.Equal(
 		t,
-		fmt.Sprintf("%s : %v", today.Format(shortDateFormat), entry.Amount),
+		fmt.Sprintf("%s : %v", today.Format(ShortDateFormat), entry.Amount),
 		builder.String(),
 	)
 }
@@ -140,9 +140,9 @@ func TestEntriesPrint(t *testing.T) {
 		entry3,
 	}
 
-	entry1Str := fmt.Sprintf("%s : %v", entry1.Date.Format(shortDateFormat), entry1.Amount)
-	entry2Str := fmt.Sprintf("%s : %v", entry2.Date.Format(shortDateFormat), entry2.Amount)
-	entry3Str := fmt.Sprintf("%s : %v", entry3.Date.Format(shortDateFormat), entry3.Amount)
+	entry1Str := fmt.Sprintf("%s : %v", entry1.Date.Format(ShortDateFormat), entry1.Amount)
+	entry2Str := fmt.Sprintf("%s : %v", entry2.Date.Format(ShortDateFormat), entry2.Amount)
+	entry3Str := fmt.Sprintf("%s : %v", entry3.Date.Format(ShortDateFormat), entry3.Amount)
 
 	indentString := " "
 	indentLevel := 2
@@ -171,9 +171,9 @@ func TestEntriesPrintSortedByDateDescending(t *testing.T) {
 		entry3,
 	}
 
-	entry1Str := fmt.Sprintf("%s : %v", entry1.Date.Format(shortDateFormat), entry1.Amount)
-	entry2Str := fmt.Sprintf("%s : %v", entry2.Date.Format(shortDateFormat), entry2.Amount)
-	entry3Str := fmt.Sprintf("%s : %v", entry3.Date.Format(shortDateFormat), entry3.Amount)
+	entry1Str := fmt.Sprintf("%s : %v", entry1.Date.Format(ShortDateFormat), entry1.Amount)
+	entry2Str := fmt.Sprintf("%s : %v", entry2.Date.Format(ShortDateFormat), entry2.Amount)
+	entry3Str := fmt.Sprintf("%s : %v", entry3.Date.Format(ShortDateFormat), entry3.Amount)
 
 	indentString := " "
 	indentLevel := 2

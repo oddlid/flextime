@@ -52,7 +52,7 @@ func (db *DB) GetTotalFlexForCustomer(customerName string) (time.Duration, error
 	if err != nil {
 		return 0, err
 	}
-	return customer.getTotalFlex(), nil
+	return customer.GetTotalFlex(), nil
 }
 
 func (db *DB) GetTotalFlexForAllCustomers() time.Duration {
@@ -61,7 +61,7 @@ func (db *DB) GetTotalFlexForAllCustomers() time.Duration {
 	}
 	var total time.Duration
 	for _, customer := range db.Customers {
-		total += customer.getTotalFlex()
+		total += customer.GetTotalFlex()
 	}
 	return total
 }
@@ -71,7 +71,7 @@ func (db *DB) SetFlexForCustomer(customerName string, date time.Time, amount tim
 	if err != nil {
 		log.Debug().Msg(err.Error())
 	}
-	if !customer.setEntry(Entry{Date: date, Amount: amount}, overwrite) {
+	if !customer.SetEntry(Entry{Date: date, Amount: amount}, overwrite) {
 		return fmt.Errorf("failed to add %v flex on %v for customer %s", amount, date, customerName)
 	}
 	return nil

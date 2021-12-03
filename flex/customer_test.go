@@ -11,7 +11,7 @@ import (
 
 func TestCustomerGetTotalFlexWhenEntriesIsNil(t *testing.T) {
 	customer := Customer{Name: "Customer1"}
-	totalFlex := customer.getTotalFlex()
+	totalFlex := customer.GetTotalFlex()
 	assert.Equal(
 		t,
 		time.Duration(0),
@@ -31,11 +31,11 @@ func TestCustomerGetEntry(t *testing.T) {
 		Entries: entries,
 	}
 
-	entry, err := customer.getEntry(today)
+	entry, err := customer.GetEntry(today)
 	assert.Nil(t, entry)
 	assert.Error(t, err)
 
-	entry, err = customer.getEntry(today.Add(24 * time.Hour))
+	entry, err = customer.GetEntry(today.Add(24 * time.Hour))
 	assert.NoError(t, err)
 	if assert.NotNil(t, entry) {
 		assert.Equal(
@@ -44,7 +44,7 @@ func TestCustomerGetEntry(t *testing.T) {
 			*entry,
 		)
 	}
-	entry, err = customer.getEntry(today.Add(-24 * time.Hour))
+	entry, err = customer.GetEntry(today.Add(-24 * time.Hour))
 	assert.NoError(t, err)
 	if assert.NotNil(t, entry) {
 		assert.Equal(
@@ -53,7 +53,7 @@ func TestCustomerGetEntry(t *testing.T) {
 			*entry,
 		)
 	}
-	entry, err = customer.getEntry(today.Add(-48 * time.Hour))
+	entry, err = customer.GetEntry(today.Add(-48 * time.Hour))
 	assert.NoError(t, err)
 	if assert.NotNil(t, entry) {
 		assert.Equal(
@@ -76,25 +76,25 @@ func TestCustomerSetEntry(t *testing.T) {
 		Entries: entries,
 	}
 
-	ok := customer.setEntry(*entries[0], false)
+	ok := customer.SetEntry(*entries[0], false)
 	assert.False(t, ok)
 
-	ok = customer.setEntry(*entries[1], false)
+	ok = customer.SetEntry(*entries[1], false)
 	assert.False(t, ok)
 
-	ok = customer.setEntry(*entries[2], false)
+	ok = customer.SetEntry(*entries[2], false)
 	assert.False(t, ok)
 
-	ok = customer.setEntry(Entry{Date: today, Amount: 30 * time.Minute}, false)
+	ok = customer.SetEntry(Entry{Date: today, Amount: 30 * time.Minute}, false)
 	assert.True(t, ok)
 
-	ok = customer.setEntry(Entry{Date: today, Amount: 15 * time.Minute}, true)
+	ok = customer.SetEntry(Entry{Date: today, Amount: 15 * time.Minute}, true)
 	assert.True(t, ok)
 
 	assert.Equal(
 		t,
 		75*time.Minute,
-		customer.getTotalFlex(),
+		customer.GetTotalFlex(),
 	)
 }
 
@@ -175,7 +175,7 @@ func TestCustomerPrintWithEntries(t *testing.T) {
 		strings.Repeat(indentString, indentLevel),
 		name,
 		strings.Repeat(indentString, indentLevel+1),
-		today.Format(shortDateFormat),
+		today.Format(ShortDateFormat),
 		amount,
 	)
 

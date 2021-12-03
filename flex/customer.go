@@ -23,14 +23,14 @@ type Customer struct {
 type Customers []*Customer
 type CustomersByName Customers
 
-func (customer Customer) getTotalFlex() time.Duration {
+func (customer Customer) GetTotalFlex() time.Duration {
 	if customer.Entries == nil {
 		return time.Duration(0)
 	}
-	return customer.Entries.getTotalFlex()
+	return customer.Entries.GetTotalFlex()
 }
 
-func (customer *Customer) getEntry(date time.Time) (*Entry, error) {
+func (customer *Customer) GetEntry(date time.Time) (*Entry, error) {
 	for _, entry := range customer.Entries {
 		if entry.Date.Equal(date) {
 			return entry, nil
@@ -39,7 +39,7 @@ func (customer *Customer) getEntry(date time.Time) (*Entry, error) {
 	return nil, fmt.Errorf("no entry for date: %v", date)
 }
 
-func (customer *Customer) setEntry(entry Entry, overwrite bool) bool {
+func (customer *Customer) SetEntry(entry Entry, overwrite bool) bool {
 	foundAtIndex := -1
 	for idx := range customer.Entries {
 		if entry.Date.Equal(customer.Entries[idx].Date) {

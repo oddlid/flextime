@@ -11,7 +11,7 @@ import (
 type EntrySortOrder uint8
 
 const (
-	shortDateFormat = "2006-01-02"
+	ShortDateFormat = "2006-01-02"
 )
 
 const (
@@ -30,7 +30,7 @@ type Entries []*Entry
 type EntriesByDate Entries
 type EntriesByAmount Entries
 
-func (entries Entries) getTotalFlex() time.Duration {
+func (entries Entries) GetTotalFlex() time.Duration {
 	var total time.Duration
 	for _, entry := range entries {
 		total += entry.Amount
@@ -43,7 +43,7 @@ func (entries Entries) Len() int {
 }
 
 func (entry Entry) Print(w io.Writer) {
-	fmt.Fprintf(w, "%s : %v", entry.Date.Format(shortDateFormat), entry.Amount)
+	fmt.Fprintf(w, "%s : %v", entry.Date.Format(ShortDateFormat), entry.Amount)
 }
 
 func (entries Entries) Sort(sortOrder EntrySortOrder) {
