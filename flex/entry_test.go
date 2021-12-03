@@ -25,6 +25,133 @@ func TestEntryMatchDateExpectTrue(t *testing.T) {
 	assert.True(t, entry1.MatchDate(entry2))
 }
 
+func TestEntryWithinDateRange(t *testing.T) {
+	today := time.Now()
+	yesterday := today.Add(-24 * time.Hour)
+	twoDaysAgo := yesterday.Add(-24 * time.Hour)
+	tomorrow := today.Add(24 * time.Hour)
+	twoDaysFromNow := tomorrow.Add(24 * time.Hour)
+
+	tests := []struct {
+		name     string
+		date     time.Time
+		from     time.Time
+		to       time.Time
+		expected bool
+	}{
+		{
+			name:     "today",
+			date:     today,
+			from:     yesterday,
+			to:       tomorrow,
+			expected: true,
+		},
+		{
+			name:     "twoDaysAgo",
+			date:     twoDaysAgo,
+			from:     yesterday,
+			to:       tomorrow,
+			expected: false,
+		},
+		{
+			name:     "twoDaysFromNow",
+			date:     twoDaysFromNow,
+			from:     yesterday,
+			to:       tomorrow,
+			expected: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			entry := Entry{Date: tt.date}
+			result := entry.WithinDateRange(tt.from, tt.to)
+			if result != tt.expected {
+				t.Errorf("Got %t expected %t", result, tt.expected)
+			}
+		})
+	}
+}
+
+func TestEntriesFilterByDateRange(t *testing.T) {
+	today := time.Now()
+	yesterday := today.Add(-24 * time.Hour)
+	twoDaysAgo := yesterday.Add(-24 * time.Hour)
+	tomorrow := today.Add(24 * time.Hour)
+	twoDaysFromNow := tomorrow.Add(24 * time.Hour)
+
+	inputEntries := Entries{
+		{Date: twoDaysAgo},
+		{Date: yesterday},
+		{Date: today},
+		{Date: tomorrow},
+		{Date: twoDaysFromNow},
+	}
+
+	resultEntries := inputEntries.FilterByDateRange(yesterday, tomorrow)
+	assert.NotNil(t, resultEntries)
+	assert.Equal(
+		t,
+		3,
+		resultEntries.Len(),
+	)
+	assert.Equal(
+		t,
+		inputEntries[1],
+		resultEntries[0],
+	)
+	assert.Equal(
+		t,
+		inputEntries[2],
+		resultEntries[1],
+	)
+	assert.Equal(
+		t,
+		inputEntries[3],
+		resultEntries[2],
+	)
+}
+
+func TestEntriesFilterByNotInDateRange(t *testing.T) {
+	today := time.Now()
+	yesterday := today.Add(-24 * time.Hour)
+	twoDaysAgo := yesterday.Add(-24 * time.Hour)
+	tomorrow := today.Add(24 * time.Hour)
+	twoDaysFromNow := tomorrow.Add(24 * time.Hour)
+
+	inputEntries := Entries{
+		{Date: twoDaysAgo},
+		{Date: yesterday},
+		{Date: today},
+		{Date: tomorrow},
+		{Date: twoDaysFromNow},
+	}
+
+	resultEntries := inputEntries.FilterByNotInDateRange(yesterday, tomorrow)
+	assert.NotNil(t, resultEntries)
+	assert.Equal(
+		t,
+		2,
+		resultEntries.Len(),
+	)
+	assert.Equal(
+		t,
+		inputEntries[0],
+		resultEntries[0],
+	)
+	assert.Equal(
+		t,
+		inputEntries[4],
+		resultEntries[1],
+	)
+}
+
+func TestEntriesDelete(t *testing.T) {
+}
+
+func TestEntriesDeleteByDate(t *testing.T) {
+}
+
 func TestGetTotalFlexForEntries(t *testing.T) {
 	entries := Entries{
 		{Date: time.Now(), Amount: 1 * time.Hour},

@@ -41,6 +41,37 @@ func (entry Entry) MatchDate(otherEntry Entry) bool {
 	return false
 }
 
+// WithinDateRange returns true if the Entry is within the two given dates, inclusive, false otherwise.
+func (entry Entry) WithinDateRange(from, to time.Time) bool {
+	if entry.Date.Before(from) || entry.Date.After(to) {
+		return false
+	}
+	return true
+}
+
+// FilterByDateRange returns a new Entries slice with the entries that are within the given range.
+func (entries Entries) FilterByDateRange(from, to time.Time) Entries {
+	filteredEntries := make(Entries, 0)
+	for _, entry := range entries {
+		if entry.WithinDateRange(from, to) {
+			filteredEntries = append(filteredEntries, entry)
+		}
+	}
+	return filteredEntries
+}
+
+// FilterByNotInDateRange returns a new Entries slice with the entries that are not within the given range.
+func (entries Entries) FilterByNotInDateRange(from, to time.Time) Entries {
+	// TODO: Check if we can simplify this to work by switching place of the arguments to FilterByDateRange
+	filteredEntries := make(Entries, 0)
+	for _, entry := range entries {
+		if !entry.WithinDateRange(from, to) {
+			filteredEntries = append(filteredEntries, entry)
+		}
+	}
+	return filteredEntries
+}
+
 // IndexOf returns the index of the matching entry, if found,
 // or -1 if not found.
 func (entries Entries) IndexOf(entry Entry) int {
@@ -50,6 +81,27 @@ func (entries Entries) IndexOf(entry Entry) int {
 		}
 	}
 	return -1
+}
+
+// Delete removes a matching entry from the Entries slice.
+// Returns true if match found and removed, false if not.
+func (entries Entries) Delete(entry Entry) bool {
+	idx := entries.IndexOf(entry)
+	if idx == -1 {
+		return false
+	}
+	// Use fast delete which changes order, since order doesn't matter, due to sorting capabilities
+	entries[idx] = entries[len(entries)-1] // copy last element to deleted position
+	entries[len(entries)-1] = nil          // write zero value to last index
+	entries = entries[:len(entries)-1]     // truncate
+
+	return true
+}
+
+// DeleteByDate removes an entry with a matching date from the Entries slice.
+// Returns true if match found and deleted, false if not.
+func (entries Entries) DeleteByDate(date time.Time) bool {
+	return entries.Delete(Entry{Date: date})
 }
 
 // GetTotalFlex returns the sum of the Amount fields in all Entries
