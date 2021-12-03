@@ -5,6 +5,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/oddlid/flextime/flex"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/urfave/cli/v2"
@@ -51,26 +52,26 @@ func getCompiledDate() time.Time {
 	return compiledTime
 }
 
-func getDBFile(c *cli.Context) error {
-	fileName := c.String("file")
-	if fileName == "" {
-		log.Debug().Msg("Empty filename")
-	}
-	_, err := os.Stat(fileName)
-	if err != nil {
-		log.Error().Err(err).Send()
-	}
-	return nil
-}
+//func getDBFile(c *cli.Context) error {
+//	fileName := c.String("file")
+//	if fileName == "" {
+//		log.Debug().Msg("Empty filename")
+//	}
+//	_, err := os.Stat(fileName)
+//	if err != nil {
+//		log.Error().Err(err).Send()
+//	}
+//	return nil
+//}
 
 func entryPointAdd(c *cli.Context) error {
 	log.Debug().Msg("In entryPointAdd")
 	if c.Bool("debug") {
 		log.Debug().Msg("We have access to global flags even in subcommands")
 	}
-	if err := getDBFile(c); err != nil {
-		return err
-	}
+	//	if err := getDBFile(c); err != nil {
+	//		return err
+	//	}
 
 	date := c.Timestamp("date")
 	log.Debug().Msgf("Date: %s", date)
@@ -115,7 +116,6 @@ func main() {
 				Aliases: []string{"f"},
 				EnvVars: []string{"FLEXTIME_FILE"},
 				Usage:   "JSON `file` to load/save data from",
-				Value:   "flextime.json",
 			},
 			&cli.StringFlag{
 				Name:    "log-level",
@@ -133,20 +133,84 @@ func main() {
 		Commands: []*cli.Command{
 			{
 				Name:    "add",
-				Aliases: []string{""},
-				Usage:   "",
+				Aliases: []string{"set"},
+				Usage:   "Add or set flex time for a given customer",
 				Action:  entryPointAdd,
 				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:    "customer",
+						Aliases: []string{"c"},
+						Usage:   "The customer name for whom to add flex",
+					},
 					&cli.TimestampFlag{
 						Name:    "date",
 						Aliases: []string{"d"},
 						Usage:   "Date (YYYY-MM-DD) to add flex for",
-						Layout:  "2006-01-02",
+						Layout:  flex.ShortDateFormat,
 					},
 					&cli.DurationFlag{
 						Name:    "amount",
 						Aliases: []string{"a"},
 						Usage:   "Amount of flex time",
+					},
+					&cli.BoolFlag{
+						Name:    "overwrite",
+						Aliases: []string{"o"},
+						Usage:   "Overwrite if matching entry already exists",
+					},
+				},
+			},
+			{
+				Name:    "list",
+				Aliases: []string{"ls"},
+				Usage:   "List recorded flex time",
+				Action:  nil,
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:    "customer",
+						Aliases: []string{"c"},
+						Usage:   "The customer for whom to list flex time",
+					},
+					&cli.BoolFlag{
+						Name:    "all",
+						Aliases: []string{"a"},
+						Usage:   "List flex for all customers",
+					},
+					&cli.TimestampFlag{
+						Name:    "date",
+						Aliases: []string{"d"},
+						Usage:   "List entries for this specific date",
+						Layout:  flex.ShortDateFormat,
+					},
+					&cli.TimestampFlag{
+						Name:    "from",
+						Aliases: []string{"f"},
+						Usage:   "List entries starting from this date",
+						Layout:  flex.ShortDateFormat,
+					},
+					&cli.TimestampFlag{
+						Name:    "to",
+						Aliases: []string{"t"},
+						Usage:   "List entries up to this date",
+						Layout:  flex.ShortDateFormat,
+					},
+				},
+			},
+			{
+				Name:    "delete",
+				Aliases: []string{""},
+				Usage:   "Delete flex entries",
+				Action:  nil,
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:    "customer",
+						Aliases: []string{"c"},
+						Usage:   "Customer from whom to delete flex entries",
+					},
+					&cli.BoolFlag{
+						Name:    "all",
+						Aliases: []string{"a"},
+						Usage:   "Delete matching entries from all customers",
 					},
 				},
 			},
