@@ -24,15 +24,15 @@ func TestDBIsEmptyExpectFalse(t *testing.T) {
 func TestDBAddCustomer(t *testing.T) {
 	db := NewDB()
 
-	c1, err1 := db.addCustomer("Customer1")
+	c1, err1 := db.AddCustomer("Customer1")
 	assert.NotNil(t, c1)
 	assert.NoError(t, err1)
 
-	c2, err2 := db.addCustomer("Customer2")
+	c2, err2 := db.AddCustomer("Customer2")
 	assert.NotNil(t, c2)
 	assert.NoError(t, err2)
 
-	c3, err3 := db.addCustomer("custOMer1")
+	c3, err3 := db.AddCustomer("custOMer1")
 	if assert.NotNil(t, c3) {
 		assert.Equal(
 			t,

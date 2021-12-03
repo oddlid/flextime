@@ -19,6 +19,47 @@ func TestCustomerGetTotalFlexWhenEntriesIsNil(t *testing.T) {
 	)
 }
 
+func TestCustomerGetEntryWhenEntriesIsNil(t *testing.T) {
+	customer := Customer{Name: "Customer1"}
+	entry, err := customer.GetEntry(time.Now())
+	assert.Nil(t, entry)
+	if assert.Error(t, err) {
+		assert.ErrorIs(t, err, ErrNoEntries)
+	}
+}
+
+func TestCustomerGetEntryWhenEntriesLenIs0(t *testing.T) {
+	customer := Customer{
+		Name:    "Customer1",
+		Entries: make(Entries, 0),
+	}
+	entry, err := customer.GetEntry(time.Now())
+	assert.Nil(t, entry)
+	if assert.Error(t, err) {
+		assert.ErrorIs(t, err, ErrNoEntries)
+	}
+}
+
+func TestCustomerGetEntryWhenEntryNotFound(t *testing.T) {
+	today := time.Now()
+	yesterday := today.Add(-24 * time.Hour)
+	twoDaysAgo := today.Add(-48 * time.Hour)
+	tomorrow := today.Add(24 * time.Hour)
+	customer := Customer{
+		Name: "Customer1",
+		Entries: Entries{
+			{Date: tomorrow},
+			{Date: yesterday},
+			{Date: twoDaysAgo},
+		},
+	}
+	entry, err := customer.GetEntry(today)
+	assert.Nil(t, entry)
+	if assert.Error(t, err) {
+		assert.ErrorIs(t, err, ErrNoEntry)
+	}
+}
+
 func TestCustomerGetEntry(t *testing.T) {
 	today := time.Now()
 	entries := Entries{

@@ -21,6 +21,7 @@ const (
 	EntrySortByAmountDescending
 )
 
+// An Entry is the unit for recording flex time +/- for a given date
 type Entry struct {
 	Date   time.Time     `json:"date"`
 	Amount time.Duration `json:"amount"`
@@ -30,6 +31,28 @@ type Entries []*Entry
 type EntriesByDate Entries
 type EntriesByAmount Entries
 
+// MatchDate returns true of the date for the two Entries match on year, month and day, false otherwise
+func (entry Entry) MatchDate(otherEntry Entry) bool {
+	if entry.Date.Year() == otherEntry.Date.Year() &&
+		entry.Date.Month() == otherEntry.Date.Month() &&
+		entry.Date.Day() == otherEntry.Date.Day() {
+		return true
+	}
+	return false
+}
+
+// IndexOf returns the index of the matching entry, if found,
+// or -1 if not found.
+func (entries Entries) IndexOf(entry Entry) int {
+	for idx := range entries {
+		if entry.MatchDate(*entries[idx]) {
+			return idx
+		}
+	}
+	return -1
+}
+
+// GetTotalFlex returns the sum of the Amount fields in all Entries
 func (entries Entries) GetTotalFlex() time.Duration {
 	var total time.Duration
 	for _, entry := range entries {
@@ -38,14 +61,17 @@ func (entries Entries) GetTotalFlex() time.Duration {
 	return total
 }
 
+// Len returns how many elements in the Entries slice
 func (entries Entries) Len() int {
 	return len(entries)
 }
 
-func (entry Entry) Print(w io.Writer) {
-	fmt.Fprintf(w, "%s : %v", entry.Date.Format(ShortDateFormat), entry.Amount)
+// Print will print the content of the Entry formatted to the given writer
+func (entry Entry) Print(writer io.Writer) {
+	fmt.Fprintf(writer, "%s : %v", entry.Date.Format(ShortDateFormat), entry.Amount)
 }
 
+// Sort will sort the Entries slice according to the given criteria
 func (entries Entries) Sort(sortOrder EntrySortOrder) {
 	switch sortOrder {
 	case EntrySortByDateAscending:
@@ -59,18 +85,20 @@ func (entries Entries) Sort(sortOrder EntrySortOrder) {
 	}
 }
 
-func (entries Entries) Print(w io.Writer, indentString string, indentLevel int) {
+// Print prints each Entry in the Entries slice to the given writer, prefixed by indentString * indentLevel
+func (entries Entries) Print(writer io.Writer, indentString string, indentLevel int) {
 	prefix := strings.Repeat(indentString, indentLevel)
 	for _, entry := range entries {
-		fmt.Fprintf(w, "%s", prefix)
-		entry.Print(w)
-		fmt.Fprint(w, "\n")
+		fmt.Fprintf(writer, "%s", prefix)
+		entry.Print(writer)
+		fmt.Fprint(writer, "\n")
 	}
 }
 
-func (entries Entries) PrintSorted(w io.Writer, indentString string, indentLevel int, sortOrder EntrySortOrder) {
+// PrintSorted first sorts the Entries according to the given criteria, then calls Print with the given parameters
+func (entries Entries) PrintSorted(writer io.Writer, indentString string, indentLevel int, sortOrder EntrySortOrder) {
 	entries.Sort(sortOrder)
-	entries.Print(w, indentString, indentLevel)
+	entries.Print(writer, indentString, indentLevel)
 }
 
 func (entriesByDate EntriesByDate) Len() int {

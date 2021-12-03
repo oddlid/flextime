@@ -9,6 +9,22 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestEntryMatchDateExpectFalse(t *testing.T) {
+	date1 := time.Date(2021, time.December, 3, 0, 0, 0, 0, time.UTC)
+	date2 := time.Date(2021, time.December, 4, 0, 0, 0, 0, time.UTC)
+	entry1 := Entry{Date: date1}
+	entry2 := Entry{Date: date2}
+	assert.False(t, entry1.MatchDate(entry2))
+}
+
+func TestEntryMatchDateExpectTrue(t *testing.T) {
+	date1 := time.Date(2021, time.December, 3, 1, 2, 3, 0, time.UTC)
+	date2 := time.Date(2021, time.December, 3, 4, 5, 6, 0, time.UTC)
+	entry1 := Entry{Date: date1}
+	entry2 := Entry{Date: date2}
+	assert.True(t, entry1.MatchDate(entry2))
+}
+
 func TestGetTotalFlexForEntries(t *testing.T) {
 	entries := Entries{
 		{Date: time.Now(), Amount: 1 * time.Hour},

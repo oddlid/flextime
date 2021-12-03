@@ -1,6 +1,7 @@
 package flex
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"sort"
@@ -15,6 +16,11 @@ const (
 	CustomerSortByNameDescending
 )
 
+var (
+	ErrNoEntry   = errors.New("no entry for given date")
+	ErrNoEntries = errors.New("no entries for customer")
+)
+
 type Customer struct {
 	Name    string  `json:"customer_name"`
 	Entries Entries `json:"flex_entries"`
@@ -23,29 +29,34 @@ type Customer struct {
 type Customers []*Customer
 type CustomersByName Customers
 
+// GetTotalFlex returns the sum of Amount for all Entries
 func (customer Customer) GetTotalFlex() time.Duration {
-	if customer.Entries == nil {
+	if customer.Entries == nil || customer.Entries.Len() == 0 {
 		return time.Duration(0)
 	}
 	return customer.Entries.GetTotalFlex()
 }
 
+// GetEntry returns the entry matching the given date, or nil + error if not found
 func (customer *Customer) GetEntry(date time.Time) (*Entry, error) {
-	for _, entry := range customer.Entries {
-		if entry.Date.Equal(date) {
-			return entry, nil
-		}
+	if customer.Entries == nil || customer.Entries.Len() == 0 {
+		return nil, ErrNoEntries
 	}
-	return nil, fmt.Errorf("no entry for date: %v", date)
+	idx := customer.Entries.IndexOf(Entry{Date: date})
+	if idx == -1 {
+		return nil, fmt.Errorf("%w: %v", ErrNoEntry, date)
+	}
+	return customer.Entries[idx], nil
 }
 
+// SetEntry will, if overwrite is false, add the given Entry to the customers Entries,
+// if it does not already exist.
+// If overwrite is true, it will replace the entry if already present.
+// Returns true if an Entry is set, false if not.
 func (customer *Customer) SetEntry(entry Entry, overwrite bool) bool {
 	foundAtIndex := -1
-	for idx := range customer.Entries {
-		if entry.Date.Equal(customer.Entries[idx].Date) {
-			foundAtIndex = idx
-			break
-		}
+	if customer.Entries != nil && customer.Entries.Len() > 0 {
+		foundAtIndex = customer.Entries.IndexOf(entry)
 	}
 	if foundAtIndex == -1 {
 		customer.Entries = append(customer.Entries, &entry)
@@ -58,11 +69,14 @@ func (customer *Customer) SetEntry(entry Entry, overwrite bool) bool {
 	return false
 }
 
-func (customer Customer) Print(w io.Writer, indentString string, indentLevel int) {
+// Print prints a strings representation of the Customer and its Entries to the given
+// writer, prefixed by indentString * indentLevel.
+// indentLevel is increased by 1 when passed on to the Entries Print function.
+func (customer Customer) Print(writer io.Writer, indentString string, indentLevel int) {
 	prefix := strings.Repeat(indentString, indentLevel)
-	fmt.Fprintf(w, "%s%s:\n", prefix, customer.Name)
+	fmt.Fprintf(writer, "%s%s:\n", prefix, customer.Name)
 	if customer.Entries != nil {
-		customer.Entries.Print(w, indentString, indentLevel+1)
+		customer.Entries.Print(writer, indentString, indentLevel+1)
 	}
 }
 
@@ -89,6 +103,7 @@ func (customersByName CustomersByName) Less(i, j int) bool {
 	return iNameLower < jNameLower
 }
 
+// Sort sorts the Customers slice according to the given criteria
 func (customers Customers) Sort(sortOrder CustomerSortOrder) {
 	switch sortOrder {
 	case CustomerSortByNameAscending:
