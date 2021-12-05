@@ -191,9 +191,9 @@ func main() {
 			},
 			{
 				Name:    "delete",
-				Aliases: []string{""},
+				Aliases: []string{"del", "rm"},
 				Usage:   "Delete flex entries",
-				Action:  nil,
+				Action:  entryPointDelete,
 				Flags: []cli.Flag{
 					&cli.StringFlag{
 						Name:    "customer",
@@ -203,7 +203,7 @@ func main() {
 					&cli.BoolFlag{
 						Name:    "all",
 						Aliases: []string{"a"},
-						Usage:   "Delete matching entries from all customers",
+						Usage:   "Delete matching entries from all customers, or all entries from matching customer",
 					},
 					&cli.TimestampFlag{
 						Name:    "date",

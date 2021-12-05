@@ -55,6 +55,7 @@ func (entries Entries) FilterByNotInDateRange(from, to time.Time) Entries {
 	return filteredEntries
 }
 
+// FirstDate returns the date of the earliest entry, or an error if no entries
 func (entries Entries) FirstDate() (*time.Time, error) {
 	if entries.Len() == 0 {
 		return nil, ErrNoEntries
@@ -68,6 +69,7 @@ func (entries Entries) FirstDate() (*time.Time, error) {
 	return date, nil
 }
 
+// LastDate returns the date of the latest entry, or an error if no entries
 func (entries Entries) LastDate() (*time.Time, error) {
 	if entries.Len() == 0 {
 		return nil, ErrNoEntries

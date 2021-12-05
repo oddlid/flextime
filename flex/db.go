@@ -90,6 +90,7 @@ func (db *DB) GetTotalFlexForAllCustomers() time.Duration {
 }
 
 // SetFlexForCustomer will either retrieve or add a Customer with the given name, depending on whether it exists or not.
+// If customerName is blank, it will use default customer.
 // It will then add a new flex Entry if no Entry with the same date exists for that customer.
 // If overwrite is true, it will replace any Entry with a matching date.
 // If overwrite is false, it will return an error if an Entry with a matching date is already present.
