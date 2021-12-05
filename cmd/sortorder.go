@@ -7,15 +7,15 @@ import (
 )
 
 var customerSortOrder = map[string]flex.CustomerSortOrder{
-	"customerasc":  flex.CustomerSortByNameAscending,
-	"customerdesc": flex.CustomerSortByNameDescending,
+	"asc":  flex.CustomerSortByNameAscending,
+	"desc": flex.CustomerSortByNameDescending,
 }
 
 var entrySortOrder = map[string]flex.EntrySortOrder{
-	"entrybydateasc":    flex.EntrySortByDateAscending,
-	"entrybydatedesc":   flex.EntrySortByDateDescending,
-	"entrybyamountasc":  flex.EntrySortByAmountAscending,
-	"entrybyamountdesc": flex.EntrySortByAmountDescending,
+	"dateasc":    flex.EntrySortByDateAscending,
+	"datedesc":   flex.EntrySortByDateDescending,
+	"amountasc":  flex.EntrySortByAmountAscending,
+	"amountdesc": flex.EntrySortByAmountDescending,
 }
 
 func customerSortOrderOptions() string {

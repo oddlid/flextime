@@ -135,10 +135,11 @@ func main() {
 				},
 			},
 			{
-				Name:    "list",
-				Aliases: []string{"ls"},
-				Usage:   "List recorded flex time",
-				Action:  entryPointList,
+				Name:                   "list",
+				Aliases:                []string{"ls"},
+				Usage:                  "List recorded flex time",
+				Action:                 entryPointList,
+				UseShortOptionHandling: true,
 				Flags: []cli.Flag{
 					&cli.StringFlag{
 						Name:    "customer",
@@ -147,7 +148,7 @@ func main() {
 					},
 					&cli.BoolFlag{
 						Name:    "verbose",
-						Aliases: []string{"v"},
+						Aliases: []string{"v", "l"},
 						Usage:   "List each entry, not just summary",
 					},
 					&cli.BoolFlag{
