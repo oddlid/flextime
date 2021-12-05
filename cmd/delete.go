@@ -1,6 +1,9 @@
 package main
 
 import (
+	"fmt"
+	"time"
+
 	"github.com/oddlid/flextime/flex"
 	"github.com/rs/zerolog/log"
 	"github.com/urfave/cli/v2"
@@ -37,39 +40,204 @@ func entryPointDelete(c *cli.Context) error {
 	if customer != nil && date != nil {
 		// delete specific date from specific customer
 		log.Debug().
-			Str("CustomerName", customer.Name).
-			Time("Date", *date).
+			Str("customer_name", customer.Name).
+			Time("date", *date).
 			Msg("Delete entry with given date for given customer")
+		if err := deleteSpecificDateFromCustomer(customer, *date); err != nil {
+			return err
+		}
 	} else if customer != nil && all {
 		// delete all entries from specific customer
 		log.Debug().
-			Str("CustomerName", customer.Name).
-			Bool("All", all).
+			Str("customer_name", customer.Name).
+			Bool("all", all).
 			Msg("Delete all entries for given customer")
+		if err := deleteAllEntriesFromCustomer(customer); err != nil {
+			return err
+		}
 	} else if customer != nil && (from != nil || to != nil) {
 		// delete date range from specific customer
 		log.Debug().
-			Str("CustomerName", customer.Name).
+			Str("customer_name", customer.Name).
 			Msg("Delete entries matching date range for given customer")
+		if err := deleteDateRangeFromCustomer(customer, from, to); err != nil {
+			return err
+		}
 	} else if all && customer == nil && date == nil && from == nil && to == nil {
 		// delete all entries from all customers
 		log.Debug().
-			Bool("All", all).
+			Bool("all", all).
 			Msg("Delete all entries from all customers!")
+		if err := deleteAllEntriesFromAllCustomers(db); err != nil {
+			return err
+		}
 	} else if all && customer == nil && date != nil && from == nil && to == nil {
 		// delete specific date from all customers
 		log.Debug().
-			Bool("All", all).
-			Time("Date", *date).
+			Bool("all", all).
+			Time("date", *date).
 			Msg("Delete specific date from all customers")
+		if err := deleteSpecificDateFromAllCustomers(db, *date); err != nil {
+			return err
+		}
 	} else if all && customer == nil && date == nil && (from != nil || to != nil) {
 		// delete date range from all customers
 		log.Debug().
-			Bool("All", all).
+			Bool("all", all).
 			Msg("Delete date range from all customers")
+		if err := deleteDateRangeFromAllCustomers(db, from, to); err != nil {
+			return err
+		}
 	} else {
-		log.Info().Msg("Invalid combination of options for delete")
+		return fmt.Errorf("invalid combination of options for delete")
 	}
+
+	err = saveDB(db)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func deleteSpecificDateFromCustomer(customer *flex.Customer, date time.Time) error {
+	if customer == nil {
+		return flex.ErrNilCustomer
+	}
+	if customer.Entries == nil || customer.Entries.Len() == 0 {
+		return flex.ErrNoEntries
+	}
+	if !customer.Entries.DeleteByDate(date) {
+		return fmt.Errorf("%w: %s", flex.ErrNoEntry, date.Format(flex.ShortDateFormat))
+	}
+
+	log.Info().
+		Str("customer_name", customer.Name).
+		Str("date", date.Format(flex.ShortDateFormat)).
+		Msg("Deleted entry with given date from customer")
+
+	return nil
+}
+
+func deleteAllEntriesFromCustomer(customer *flex.Customer) error {
+	if customer == nil {
+		return flex.ErrNilCustomer
+	}
+	customer.Entries = make(flex.Entries, 0)
+
+	log.Info().
+		Str("customer_name", customer.Name).
+		Msg("Deleted all entries from customer")
+
+	return nil
+}
+
+func deleteDateRangeFromCustomer(customer *flex.Customer, from, to *time.Time) error {
+	if customer == nil {
+		return flex.ErrNilCustomer
+	}
+	if customer.Entries == nil || customer.Entries.Len() == 0 {
+		return flex.ErrNoEntries
+	}
+
+	if from == nil {
+		firstDate, err := customer.Entries.FirstDate()
+		if err != nil {
+			return err
+		}
+		from = firstDate
+	}
+
+	if to == nil {
+		lastDate, err := customer.Entries.LastDate()
+		if err != nil {
+			return err
+		}
+		to = lastDate
+	}
+
+	filteredEntries := customer.Entries.FilterByNotInDateRange(*from, *to)
+	entriesDeleted := customer.Entries.Len() - filteredEntries.Len()
+	customer.Entries = filteredEntries
+
+	log.Info().
+		Str("customer_name", customer.Name).
+		Int("entries_deleted", entriesDeleted).
+		Msg("Deleted entries in date range from customer")
+
+	return nil
+}
+
+func deleteAllEntriesFromAllCustomers(db *flex.DB) error {
+	if db == nil || db.IsEmpty() {
+		return flex.ErrEmptyDB
+	}
+	for _, customer := range db.Customers {
+		customer.Entries = make(flex.Entries, 0)
+	}
+
+	log.Info().Msg("Deleted all entries from all customers")
+
+	return nil
+}
+
+func deleteSpecificDateFromAllCustomers(db *flex.DB, date time.Time) error {
+	if db == nil || db.IsEmpty() {
+		return flex.ErrEmptyDB
+	}
+
+	entriesDeleted := 0
+	for _, customer := range db.Customers {
+		if customer.Entries.DeleteByDate(date) {
+			entriesDeleted++
+		}
+	}
+
+	log.Info().
+		Time("date", date).
+		Int("entries_deleted", entriesDeleted).
+		Msg("Deleted entries matching date from all customers")
+
+	return nil
+}
+
+func deleteDateRangeFromAllCustomers(db *flex.DB, from, to *time.Time) error {
+	if db == nil || db.IsEmpty() {
+		return flex.ErrEmptyDB
+	}
+
+	var firstDate *time.Time
+	var lastDate *time.Time
+	var err error
+	entriesDeleted := 0
+	for _, customer := range db.Customers {
+		if customer.Entries == nil || customer.Entries.Len() == 0 {
+			continue
+		}
+		if from == nil {
+			firstDate, err = customer.Entries.FirstDate()
+			if err != nil {
+				continue
+			}
+		} else {
+			firstDate = from
+		}
+		if to == nil {
+			lastDate, err = customer.Entries.LastDate()
+			if err != nil {
+				continue
+			}
+		} else {
+			lastDate = to
+		}
+		filteredEntries := customer.Entries.FilterByNotInDateRange(*firstDate, *lastDate)
+		entriesDeleted += customer.Entries.Len() - filteredEntries.Len()
+		customer.Entries = filteredEntries
+	}
+
+	log.Info().
+		Int("entries_deleted", entriesDeleted).
+		Msg("Deleted entries matching date range from all customers")
 
 	return nil
 }

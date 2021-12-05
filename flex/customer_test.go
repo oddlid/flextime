@@ -185,6 +185,15 @@ func TestCustomersSortDescending(t *testing.T) {
 	assert.Equal(t, c4, customers[0])
 }
 
+func TestCustomersLongestName(t *testing.T) {
+	customers := Customers{
+		{Name: "123"},
+		{Name: "1234"},
+		{Name: "12345"},
+	}
+	assert.Equal(t, 5, customers.LongestName())
+}
+
 //func TestCustomerPrintWhenEntriesIsNil(t *testing.T) {
 //	indentString := " "
 //	indentLevel := 2

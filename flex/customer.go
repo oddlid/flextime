@@ -99,6 +99,8 @@ func (customers Customers) Sort(sortOrder CustomerSortOrder) {
 	}
 }
 
+// LongestName returns the length of the longest customer name in the collection.
+// Useful for alignment when printing.
 func (customers Customers) LongestName() int {
 	maxLen := 0
 	for _, customer := range customers {
