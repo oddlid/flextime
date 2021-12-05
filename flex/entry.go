@@ -1,24 +1,8 @@
 package flex
 
 import (
-	"fmt"
-	"io"
 	"sort"
-	"strings"
 	"time"
-)
-
-type EntrySortOrder uint8
-
-const (
-	ShortDateFormat = "2006-01-02"
-)
-
-const (
-	EntrySortByDateAscending EntrySortOrder = iota
-	EntrySortByDateDescending
-	EntrySortByAmountAscending
-	EntrySortByAmountDescending
 )
 
 // An Entry is the unit for recording flex time +/- for a given date
@@ -62,7 +46,6 @@ func (entries Entries) FilterByDateRange(from, to time.Time) Entries {
 
 // FilterByNotInDateRange returns a new Entries slice with the entries that are not within the given range.
 func (entries Entries) FilterByNotInDateRange(from, to time.Time) Entries {
-	// TODO: Check if we can simplify this to work by switching place of the arguments to FilterByDateRange
 	filteredEntries := make(Entries, 0)
 	for _, entry := range entries {
 		if !entry.WithinDateRange(from, to) {
@@ -70,6 +53,32 @@ func (entries Entries) FilterByNotInDateRange(from, to time.Time) Entries {
 		}
 	}
 	return filteredEntries
+}
+
+func (entries Entries) FirstDate() (*time.Time, error) {
+	if entries.Len() == 0 {
+		return nil, ErrNoEntries
+	}
+	var date *time.Time = &entries[0].Date
+	for _, entry := range entries {
+		if entry.Date.Before(*date) {
+			date = &entry.Date
+		}
+	}
+	return date, nil
+}
+
+func (entries Entries) LastDate() (*time.Time, error) {
+	if entries.Len() == 0 {
+		return nil, ErrNoEntries
+	}
+	var date *time.Time = &entries[entries.Len()-1].Date
+	for _, entry := range entries {
+		if entry.Date.After(*date) {
+			date = &entry.Date
+		}
+	}
+	return date, nil
 }
 
 // IndexOf returns the index of the matching entry, if found,
@@ -85,22 +94,22 @@ func (entries Entries) IndexOf(entry Entry) int {
 
 // Delete removes a matching entry from the Entries slice.
 // Returns true if match found and removed, false if not.
-func (entries Entries) Delete(entry Entry) bool {
+func (entries *Entries) Delete(entry Entry) bool {
 	idx := entries.IndexOf(entry)
 	if idx == -1 {
 		return false
 	}
-	// Use fast delete which changes order, since order doesn't matter, due to sorting capabilities
-	entries[idx] = entries[len(entries)-1] // copy last element to deleted position
-	entries[len(entries)-1] = nil          // write zero value to last index
-	entries = entries[:len(entries)-1]     // truncate
+	// use slow delete, preserving order
+	copy((*entries)[idx:], (*entries)[idx+1:])
+	(*entries)[len(*entries)-1] = nil
+	*entries = (*entries)[:len(*entries)-1]
 
 	return true
 }
 
 // DeleteByDate removes an entry with a matching date from the Entries slice.
 // Returns true if match found and deleted, false if not.
-func (entries Entries) DeleteByDate(date time.Time) bool {
+func (entries *Entries) DeleteByDate(date time.Time) bool {
 	return entries.Delete(Entry{Date: date})
 }
 
@@ -119,9 +128,25 @@ func (entries Entries) Len() int {
 }
 
 // Print will print the content of the Entry formatted to the given writer
-func (entry Entry) Print(writer io.Writer) {
-	fmt.Fprintf(writer, "%s : %v", entry.Date.Format(ShortDateFormat), entry.Amount)
-}
+//func (entry Entry) Print(writer io.Writer) {
+//	fmt.Fprintf(writer, "%s : %v", entry.Date.Format(ShortDateFormat), entry.Amount)
+//}
+
+// PrintSorted first sorts the Entries according to the given criteria, then calls Print with the given parameters
+//func (entries Entries) PrintSorted(writer io.Writer, indentString string, indentLevel int, sortOrder EntrySortOrder) {
+//	entries.Sort(sortOrder)
+//	entries.Print(writer, indentString, indentLevel)
+//}
+
+// Print prints each Entry in the Entries slice to the given writer, prefixed by indentString * indentLevel
+//func (entries Entries) Print(writer io.Writer, indentString string, indentLevel int) {
+//	prefix := strings.Repeat(indentString, indentLevel)
+//	for _, entry := range entries {
+//		fmt.Fprintf(writer, "%s", prefix)
+//		entry.Print(writer)
+//		fmt.Fprint(writer, "\n")
+//	}
+//}
 
 // Sort will sort the Entries slice according to the given criteria
 func (entries Entries) Sort(sortOrder EntrySortOrder) {
@@ -134,23 +159,8 @@ func (entries Entries) Sort(sortOrder EntrySortOrder) {
 		sort.Sort(EntriesByAmount(entries))
 	case EntrySortByAmountDescending:
 		sort.Sort(sort.Reverse(EntriesByAmount(entries)))
+	default:
 	}
-}
-
-// Print prints each Entry in the Entries slice to the given writer, prefixed by indentString * indentLevel
-func (entries Entries) Print(writer io.Writer, indentString string, indentLevel int) {
-	prefix := strings.Repeat(indentString, indentLevel)
-	for _, entry := range entries {
-		fmt.Fprintf(writer, "%s", prefix)
-		entry.Print(writer)
-		fmt.Fprint(writer, "\n")
-	}
-}
-
-// PrintSorted first sorts the Entries according to the given criteria, then calls Print with the given parameters
-func (entries Entries) PrintSorted(writer io.Writer, indentString string, indentLevel int, sortOrder EntrySortOrder) {
-	entries.Sort(sortOrder)
-	entries.Print(writer, indentString, indentLevel)
 }
 
 func (entriesByDate EntriesByDate) Len() int {

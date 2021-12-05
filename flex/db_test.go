@@ -149,6 +149,16 @@ func TestDBSetFlexForCustomerNoOverwrite(t *testing.T) {
 	assert.Error(t, err)
 }
 
+func TestDBSetFlexForCustomerWithNoName(t *testing.T) {
+	today := time.Now()
+	amount := 1 * time.Nanosecond
+	db := NewDB()
+	err := db.SetFlexForCustomer("", today, amount, false)
+	assert.NoError(t, err)
+	assert.Equal(t, 1, db.Customers.Len())
+	assert.Equal(t, DefaultCustomerName, db.Customers[0].Name)
+}
+
 func TestDBSetFlexForCustomer(t *testing.T) {
 	today := time.Now()
 	overwrite := true
@@ -197,4 +207,40 @@ func TestDBSetFlexForCustomer(t *testing.T) {
 		1*time.Second,
 		totalFlex,
 	)
+}
+
+func TestDBGetDefaultCustomerWhenCustomersIsNil(t *testing.T) {
+	db := &DB{}
+	customer := db.GetDefaultCustomer()
+	assert.NotNil(t, customer)
+	assert.Equal(t, DefaultCustomerName, customer.Name)
+	assert.NotNil(t, db.Customers)
+	assert.Equal(t, 1, db.Customers.Len())
+}
+
+func TestDBGetDefaultCustomerWhenDefaultCustomerExists(t *testing.T) {
+	db := &DB{
+		Customers: Customers{
+			{Name: "Customer1"},
+			{Name: "Customer2"},
+			{Name: DefaultCustomerName},
+			{Name: "Customer3"},
+		},
+	}
+	customer := db.GetDefaultCustomer()
+	assert.NotNil(t, customer)
+	assert.Equal(t, DefaultCustomerName, customer.Name)
+}
+
+func TestDBGetDefaultCustomerExpectFirst(t *testing.T) {
+	db := &DB{
+		Customers: Customers{
+			{Name: "Customer2"},
+			{Name: "Customer1"},
+			{Name: "Customer3"},
+		},
+	}
+	customer := db.GetDefaultCustomer()
+	assert.NotNil(t, customer)
+	assert.Equal(t, "Customer2", customer.Name)
 }

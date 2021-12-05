@@ -1,8 +1,6 @@
 package flex
 
 import (
-	"fmt"
-	"strings"
 	"testing"
 	"time"
 
@@ -146,10 +144,111 @@ func TestEntriesFilterByNotInDateRange(t *testing.T) {
 	)
 }
 
-func TestEntriesDelete(t *testing.T) {
+func TestEntriesFirstDateWhenEntriesIsEmpty(t *testing.T) {
+	entries := make(Entries, 0)
+	date, err := entries.FirstDate()
+	assert.Nil(t, date)
+	if assert.Error(t, err) {
+		assert.ErrorIs(t, err, ErrNoEntries)
+	}
+}
+
+func TestEntriesFirstDate(t *testing.T) {
+	today := time.Now()
+	yesterday := today.Add(-24 * time.Hour)
+	tomorrow := today.Add(24 * time.Hour)
+	entries := Entries{
+		{Date: tomorrow},
+		{Date: yesterday},
+		{Date: today},
+	}
+	date, err := entries.FirstDate()
+	assert.NoError(t, err)
+	if assert.NotNil(t, date) {
+		assert.Equal(
+			t,
+			&yesterday,
+			date,
+		)
+	}
+}
+
+func TestEntriesLastDateWhenEntriesIsEmpty(t *testing.T) {
+	entries := make(Entries, 0)
+	date, err := entries.LastDate()
+	assert.Nil(t, date)
+	if assert.Error(t, err) {
+		assert.ErrorIs(t, err, ErrNoEntries)
+	}
+}
+
+func TestEntriesLastDate(t *testing.T) {
+	today := time.Now()
+	yesterday := today.Add(-24 * time.Hour)
+	tomorrow := today.Add(24 * time.Hour)
+	entries := Entries{
+		{Date: tomorrow},
+		{Date: yesterday},
+		{Date: today},
+	}
+	date, err := entries.LastDate()
+	assert.NoError(t, err)
+	if assert.NotNil(t, date) {
+		assert.Equal(
+			t,
+			&tomorrow,
+			date,
+		)
+	}
+}
+
+func TestEntriesDeleteExpectTrue(t *testing.T) {
+	today := time.Now()
+	yesterday := today.Add(-24 * time.Hour)
+	tomorrow := today.Add(24 * time.Hour)
+	entries := Entries{
+		{Date: yesterday},
+		{Date: today},
+		{Date: tomorrow},
+	}
+
+	assert.True(t, entries.Delete(Entry{Date: today}))
+	assert.Equal(t, 2, entries.Len())
+	assert.True(t, yesterday.Equal(entries[0].Date))
+	assert.True(t, tomorrow.Equal(entries[1].Date))
+}
+
+func TestEntriesDeleteExpectFalse(t *testing.T) {
+	today := time.Now()
+	yesterday := today.Add(-24 * time.Hour)
+	tomorrow := today.Add(24 * time.Hour)
+	entries := Entries{
+		{Date: yesterday},
+		{Date: today},
+		{Date: tomorrow},
+	}
+
+	assert.False(t, entries.Delete(Entry{Date: today.Add(48 * time.Hour)}))
+	assert.Equal(t, 3, entries.Len())
+	assert.True(t, yesterday.Equal(entries[0].Date))
+	assert.True(t, today.Equal(entries[1].Date))
+	assert.True(t, tomorrow.Equal(entries[2].Date))
 }
 
 func TestEntriesDeleteByDate(t *testing.T) {
+	today := time.Now()
+	yesterday := today.Add(-24 * time.Hour)
+	tomorrow := today.Add(24 * time.Hour)
+	entries := Entries{
+		{Date: yesterday},
+		{Date: today},
+		{Date: tomorrow},
+	}
+
+	assert.True(t, entries.DeleteByDate(today))
+	assert.Equal(t, 2, entries.Len())
+	assert.True(t, yesterday.Equal(entries[0].Date))
+	assert.True(t, tomorrow.Equal(entries[1].Date))
 }
 
 func TestGetTotalFlexForEntries(t *testing.T) {
@@ -178,17 +277,17 @@ func TestEntriesLen(t *testing.T) {
 	)
 }
 
-func TestEntryPrint(t *testing.T) {
-	today := time.Now()
-	entry := Entry{Date: today, Amount: 1 * time.Hour}
-	builder := strings.Builder{}
-	entry.Print(&builder)
-	assert.Equal(
-		t,
-		fmt.Sprintf("%s : %v", today.Format(ShortDateFormat), entry.Amount),
-		builder.String(),
-	)
-}
+//func TestEntryPrint(t *testing.T) {
+//	today := time.Now()
+//	entry := Entry{Date: today, Amount: 1 * time.Hour}
+//	builder := strings.Builder{}
+//	entry.Print(&builder)
+//	assert.Equal(
+//		t,
+//		fmt.Sprintf("%s : %v", today.Format(ShortDateFormat), entry.Amount),
+//		builder.String(),
+//	)
+//}
 
 func TestSortEntriesByDateAscending(t *testing.T) {
 	today := time.Now()
@@ -272,64 +371,64 @@ func TestSortEntriesByAmountDescending(t *testing.T) {
 	assert.Equal(t, entry3, entries[0])
 }
 
-func TestEntriesPrint(t *testing.T) {
-	today := time.Now()
-	entry1 := &Entry{Date: today, Amount: 1 * time.Nanosecond}
-	entry2 := &Entry{Date: today.Add(24 * time.Hour), Amount: 2 * time.Nanosecond}
-	entry3 := &Entry{Date: today.Add(48 * time.Hour), Amount: 3 * time.Nanosecond}
-	entries := Entries{
-		entry1,
-		entry2,
-		entry3,
-	}
+//func TestEntriesPrint(t *testing.T) {
+//	today := time.Now()
+//	entry1 := &Entry{Date: today, Amount: 1 * time.Nanosecond}
+//	entry2 := &Entry{Date: today.Add(24 * time.Hour), Amount: 2 * time.Nanosecond}
+//	entry3 := &Entry{Date: today.Add(48 * time.Hour), Amount: 3 * time.Nanosecond}
+//	entries := Entries{
+//		entry1,
+//		entry2,
+//		entry3,
+//	}
+//
+//	entry1Str := fmt.Sprintf("%s : %v", entry1.Date.Format(ShortDateFormat), entry1.Amount)
+//	entry2Str := fmt.Sprintf("%s : %v", entry2.Date.Format(ShortDateFormat), entry2.Amount)
+//	entry3Str := fmt.Sprintf("%s : %v", entry3.Date.Format(ShortDateFormat), entry3.Amount)
+//
+//	indentString := " "
+//	indentLevel := 2
+//	prefix := strings.Repeat(indentString, indentLevel)
+//
+//	expected := fmt.Sprintf("%s%s\n%s%s\n%s%s\n", prefix, entry1Str, prefix, entry2Str, prefix, entry3Str)
+//	builder := strings.Builder{}
+//
+//	entries.Print(&builder, indentString, indentLevel)
+//
+//	assert.Equal(
+//		t,
+//		expected,
+//		builder.String(),
+//	)
+//}
 
-	entry1Str := fmt.Sprintf("%s : %v", entry1.Date.Format(ShortDateFormat), entry1.Amount)
-	entry2Str := fmt.Sprintf("%s : %v", entry2.Date.Format(ShortDateFormat), entry2.Amount)
-	entry3Str := fmt.Sprintf("%s : %v", entry3.Date.Format(ShortDateFormat), entry3.Amount)
-
-	indentString := " "
-	indentLevel := 2
-	prefix := strings.Repeat(indentString, indentLevel)
-
-	expected := fmt.Sprintf("%s%s\n%s%s\n%s%s\n", prefix, entry1Str, prefix, entry2Str, prefix, entry3Str)
-	builder := strings.Builder{}
-
-	entries.Print(&builder, indentString, indentLevel)
-
-	assert.Equal(
-		t,
-		expected,
-		builder.String(),
-	)
-}
-
-func TestEntriesPrintSortedByDateDescending(t *testing.T) {
-	today := time.Now()
-	entry1 := &Entry{Date: today, Amount: 1 * time.Nanosecond}
-	entry2 := &Entry{Date: today.Add(24 * time.Hour), Amount: 2 * time.Nanosecond}
-	entry3 := &Entry{Date: today.Add(48 * time.Hour), Amount: 3 * time.Nanosecond}
-	entries := Entries{
-		entry1,
-		entry2,
-		entry3,
-	}
-
-	entry1Str := fmt.Sprintf("%s : %v", entry1.Date.Format(ShortDateFormat), entry1.Amount)
-	entry2Str := fmt.Sprintf("%s : %v", entry2.Date.Format(ShortDateFormat), entry2.Amount)
-	entry3Str := fmt.Sprintf("%s : %v", entry3.Date.Format(ShortDateFormat), entry3.Amount)
-
-	indentString := " "
-	indentLevel := 2
-	prefix := strings.Repeat(indentString, indentLevel)
-
-	expected := fmt.Sprintf("%s%s\n%s%s\n%s%s\n", prefix, entry3Str, prefix, entry2Str, prefix, entry1Str)
-	builder := strings.Builder{}
-
-	entries.PrintSorted(&builder, indentString, indentLevel, EntrySortByDateDescending)
-
-	assert.Equal(
-		t,
-		expected,
-		builder.String(),
-	)
-}
+//func TestEntriesPrintSortedByDateDescending(t *testing.T) {
+//	today := time.Now()
+//	entry1 := &Entry{Date: today, Amount: 1 * time.Nanosecond}
+//	entry2 := &Entry{Date: today.Add(24 * time.Hour), Amount: 2 * time.Nanosecond}
+//	entry3 := &Entry{Date: today.Add(48 * time.Hour), Amount: 3 * time.Nanosecond}
+//	entries := Entries{
+//		entry1,
+//		entry2,
+//		entry3,
+//	}
+//
+//	entry1Str := fmt.Sprintf("%s : %v", entry1.Date.Format(ShortDateFormat), entry1.Amount)
+//	entry2Str := fmt.Sprintf("%s : %v", entry2.Date.Format(ShortDateFormat), entry2.Amount)
+//	entry3Str := fmt.Sprintf("%s : %v", entry3.Date.Format(ShortDateFormat), entry3.Amount)
+//
+//	indentString := " "
+//	indentLevel := 2
+//	prefix := strings.Repeat(indentString, indentLevel)
+//
+//	expected := fmt.Sprintf("%s%s\n%s%s\n%s%s\n", prefix, entry3Str, prefix, entry2Str, prefix, entry1Str)
+//	builder := strings.Builder{}
+//
+//	entries.PrintSorted(&builder, indentString, indentLevel, EntrySortByDateDescending)
+//
+//	assert.Equal(
+//		t,
+//		expected,
+//		builder.String(),
+//	)
+//}

@@ -46,38 +46,10 @@ func getCompiledDate() time.Time {
 			compiledTime = t
 		}
 	} else {
-		log.Debug().Msg("BuildDate not set, using time.Now()")
+		//log.Debug().Msg("BuildDate not set, using time.Now()")
 		compiledTime = time.Now()
 	}
 	return compiledTime
-}
-
-//func getDBFile(c *cli.Context) error {
-//	fileName := c.String("file")
-//	if fileName == "" {
-//		log.Debug().Msg("Empty filename")
-//	}
-//	_, err := os.Stat(fileName)
-//	if err != nil {
-//		log.Error().Err(err).Send()
-//	}
-//	return nil
-//}
-
-func entryPointAdd(c *cli.Context) error {
-	log.Debug().Msg("In entryPointAdd")
-	if c.Bool("debug") {
-		log.Debug().Msg("We have access to global flags even in subcommands")
-	}
-	//	if err := getDBFile(c); err != nil {
-	//		return err
-	//	}
-
-	date := c.Timestamp("date")
-	log.Debug().Msgf("Date: %s", date)
-	amount := c.Duration("amount")
-	log.Debug().Msgf("Amount: %.0f minutes", amount.Minutes())
-	return nil
 }
 
 func main() {
@@ -140,13 +112,15 @@ func main() {
 					&cli.StringFlag{
 						Name:    "customer",
 						Aliases: []string{"c"},
-						Usage:   "The customer name for whom to add flex",
+						Usage:   "The customer `name` for whom to add flex",
 					},
 					&cli.TimestampFlag{
-						Name:    "date",
-						Aliases: []string{"d"},
-						Usage:   "Date (YYYY-MM-DD) to add flex for",
-						Layout:  flex.ShortDateFormat,
+						Name:        "date",
+						Aliases:     []string{"d"},
+						Usage:       "Date (`YYYY-MM-DD`) to add flex for",
+						Layout:      flex.ShortDateFormat,
+						Value:       cli.NewTimestamp(time.Now()),
+						DefaultText: time.Now().Format(flex.ShortDateFormat),
 					},
 					&cli.DurationFlag{
 						Name:    "amount",
@@ -164,7 +138,7 @@ func main() {
 				Name:    "list",
 				Aliases: []string{"ls"},
 				Usage:   "List recorded flex time",
-				Action:  nil,
+				Action:  entryPointList,
 				Flags: []cli.Flag{
 					&cli.StringFlag{
 						Name:    "customer",
@@ -172,9 +146,28 @@ func main() {
 						Usage:   "The customer for whom to list flex time",
 					},
 					&cli.BoolFlag{
+						Name:    "verbose",
+						Aliases: []string{"v"},
+						Usage:   "List each entry, not just summary",
+					},
+					&cli.BoolFlag{
 						Name:    "all",
 						Aliases: []string{"a"},
 						Usage:   "List flex for all customers",
+					},
+					&cli.StringFlag{
+						Name: "customer-sort",
+						Usage: fmt.Sprintf(
+							"Sort `order` if listing all customers. (options: %s)",
+							customerSortOrderOptions(),
+						),
+					},
+					&cli.StringFlag{
+						Name: "entry-sort",
+						Usage: fmt.Sprintf(
+							"Sort `order` for entries, if verbose is set. (options: %s)",
+							entrySortOrderOptions(),
+						),
 					},
 					&cli.TimestampFlag{
 						Name:    "date",
@@ -211,6 +204,24 @@ func main() {
 						Name:    "all",
 						Aliases: []string{"a"},
 						Usage:   "Delete matching entries from all customers",
+					},
+					&cli.TimestampFlag{
+						Name:    "date",
+						Aliases: []string{"d"},
+						Usage:   "Delete entries matching this specific date",
+						Layout:  flex.ShortDateFormat,
+					},
+					&cli.TimestampFlag{
+						Name:    "from",
+						Aliases: []string{"f"},
+						Usage:   "Delete entries starting from this date",
+						Layout:  flex.ShortDateFormat,
+					},
+					&cli.TimestampFlag{
+						Name:    "to",
+						Aliases: []string{"t"},
+						Usage:   "Delete entries up to this date",
+						Layout:  flex.ShortDateFormat,
 					},
 				},
 			},

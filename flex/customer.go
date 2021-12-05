@@ -1,24 +1,10 @@
 package flex
 
 import (
-	"errors"
 	"fmt"
-	"io"
 	"sort"
 	"strings"
 	"time"
-)
-
-type CustomerSortOrder uint8
-
-const (
-	CustomerSortByNameAscending CustomerSortOrder = iota
-	CustomerSortByNameDescending
-)
-
-var (
-	ErrNoEntry   = errors.New("no entry for given date")
-	ErrNoEntries = errors.New("no entries for customer")
 )
 
 type Customer struct {
@@ -72,13 +58,13 @@ func (customer *Customer) SetEntry(entry Entry, overwrite bool) bool {
 // Print prints a strings representation of the Customer and its Entries to the given
 // writer, prefixed by indentString * indentLevel.
 // indentLevel is increased by 1 when passed on to the Entries Print function.
-func (customer Customer) Print(writer io.Writer, indentString string, indentLevel int) {
-	prefix := strings.Repeat(indentString, indentLevel)
-	fmt.Fprintf(writer, "%s%s:\n", prefix, customer.Name)
-	if customer.Entries != nil {
-		customer.Entries.Print(writer, indentString, indentLevel+1)
-	}
-}
+//func (customer Customer) Print(writer io.Writer, indentString string, indentLevel int) {
+//	prefix := strings.Repeat(indentString, indentLevel)
+//	fmt.Fprintf(writer, "%s%s:\n", prefix, customer.Name)
+//	if customer.Entries != nil {
+//		customer.Entries.Print(writer, indentString, indentLevel+1)
+//	}
+//}
 
 func (customers Customers) Len() int {
 	return len(customers)
@@ -111,4 +97,15 @@ func (customers Customers) Sort(sortOrder CustomerSortOrder) {
 	case CustomerSortByNameDescending:
 		sort.Sort(sort.Reverse(CustomersByName(customers)))
 	}
+}
+
+func (customers Customers) LongestName() int {
+	maxLen := 0
+	for _, customer := range customers {
+		clen := len(customer.Name)
+		if clen > maxLen {
+			maxLen = clen
+		}
+	}
+	return maxLen
 }

@@ -7,11 +7,6 @@ import (
 	"os"
 )
 
-var (
-	ErrInvalidJSONInput = errors.New("invalid JSON input")
-	ErrEmptyDB          = errors.New("empty flex database")
-)
-
 // NewDB initializes and returns a new, empty DB instance
 func NewDB() *DB {
 	return &DB{

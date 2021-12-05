@@ -1,17 +1,11 @@
 package flex
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 	"time"
 
 	"github.com/rs/zerolog/log"
-)
-
-var (
-	ErrNoSuchCustomer = errors.New("no such customer")
-	ErrCustomerExists = errors.New("customer already exists")
 )
 
 type DB struct {
@@ -36,6 +30,25 @@ func (db *DB) GetCustomer(name string) (*Customer, error) {
 		}
 	}
 	return nil, fmt.Errorf("%w: %q", ErrNoSuchCustomer, name)
+}
+
+// GetDefaultCustomer is a convenience method that will either return
+// a customer with the name "default", if found, or the first.
+// If no customers exist, a default is created and returned.
+func (db *DB) GetDefaultCustomer() *Customer {
+	if db.Customers == nil {
+		db.Customers = make(Customers, 0)
+	}
+	defaultCustomer := Customer{Name: DefaultCustomerName}
+	if db.Customers.Len() == 0 {
+		db.Customers = append(db.Customers, &defaultCustomer)
+		return &defaultCustomer
+	}
+	customer, err := db.GetCustomer(DefaultCustomerName)
+	if err == nil {
+		return customer
+	}
+	return db.Customers[0]
 }
 
 // AddCustomer will add a new Customer object with the given name to the DB if it doesn't exist.
@@ -81,12 +94,23 @@ func (db *DB) GetTotalFlexForAllCustomers() time.Duration {
 // If overwrite is true, it will replace any Entry with a matching date.
 // If overwrite is false, it will return an error if an Entry with a matching date is already present.
 func (db *DB) SetFlexForCustomer(customerName string, date time.Time, amount time.Duration, overwrite bool) error {
-	customer, err := db.AddCustomer(customerName)
-	if err != nil {
-		log.Debug().Msg(err.Error())
+	var err error
+	var customer *Customer
+	if customerName == "" {
+		customer = db.GetDefaultCustomer()
+	} else {
+		customer, err = db.AddCustomer(customerName)
+		if err != nil {
+			log.Debug().Err(err).Send()
+		}
 	}
 	if !customer.SetEntry(Entry{Date: date, Amount: amount}, overwrite) {
-		return fmt.Errorf("failed to add %v flex on %v for customer %s", amount, date, customerName)
+		return fmt.Errorf(
+			"failed to add %v flex on %s for customer: %s",
+			amount,
+			date.Format(ShortDateFormat),
+			customer.Name,
+		)
 	}
 	return nil
 }
