@@ -59,7 +59,7 @@ func (entries Entries) FirstDate() (*time.Time, error) {
 	if entries.Len() == 0 {
 		return nil, ErrNoEntries
 	}
-	var date *time.Time = &entries[0].Date
+	var date = &entries[0].Date
 	for _, entry := range entries {
 		if entry.Date.Before(*date) {
 			date = &entry.Date
@@ -72,7 +72,7 @@ func (entries Entries) LastDate() (*time.Time, error) {
 	if entries.Len() == 0 {
 		return nil, ErrNoEntries
 	}
-	var date *time.Time = &entries[entries.Len()-1].Date
+	var date = &entries[entries.Len()-1].Date
 	for _, entry := range entries {
 		if entry.Date.After(*date) {
 			date = &entry.Date
