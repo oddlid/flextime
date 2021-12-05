@@ -1,5 +1,5 @@
 BINARY := flextime.bin
-VERSION := 2021-10-30
+VERSION := 2021-12-05
 UNAME := $(shell uname -s)
 SOURCES := $(wildcard flex/*.go cmd/*.go)
 COMMIT_ID := $(shell git describe --tags --always)
