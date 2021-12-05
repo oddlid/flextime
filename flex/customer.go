@@ -55,17 +55,6 @@ func (customer *Customer) SetEntry(entry Entry, overwrite bool) bool {
 	return false
 }
 
-// Print prints a strings representation of the Customer and its Entries to the given
-// writer, prefixed by indentString * indentLevel.
-// indentLevel is increased by 1 when passed on to the Entries Print function.
-//func (customer Customer) Print(writer io.Writer, indentString string, indentLevel int) {
-//	prefix := strings.Repeat(indentString, indentLevel)
-//	fmt.Fprintf(writer, "%s%s:\n", prefix, customer.Name)
-//	if customer.Entries != nil {
-//		customer.Entries.Print(writer, indentString, indentLevel+1)
-//	}
-//}
-
 func (customers Customers) Len() int {
 	return len(customers)
 }

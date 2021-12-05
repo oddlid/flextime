@@ -277,18 +277,6 @@ func TestEntriesLen(t *testing.T) {
 	)
 }
 
-//func TestEntryPrint(t *testing.T) {
-//	today := time.Now()
-//	entry := Entry{Date: today, Amount: 1 * time.Hour}
-//	builder := strings.Builder{}
-//	entry.Print(&builder)
-//	assert.Equal(
-//		t,
-//		fmt.Sprintf("%s : %v", today.Format(ShortDateFormat), entry.Amount),
-//		builder.String(),
-//	)
-//}
-
 func TestSortEntriesByDateAscending(t *testing.T) {
 	today := time.Now()
 	entry1 := &Entry{Date: today.Add(48 * time.Hour)}
@@ -370,65 +358,3 @@ func TestSortEntriesByAmountDescending(t *testing.T) {
 	assert.Equal(t, entry2, entries[1])
 	assert.Equal(t, entry3, entries[0])
 }
-
-//func TestEntriesPrint(t *testing.T) {
-//	today := time.Now()
-//	entry1 := &Entry{Date: today, Amount: 1 * time.Nanosecond}
-//	entry2 := &Entry{Date: today.Add(24 * time.Hour), Amount: 2 * time.Nanosecond}
-//	entry3 := &Entry{Date: today.Add(48 * time.Hour), Amount: 3 * time.Nanosecond}
-//	entries := Entries{
-//		entry1,
-//		entry2,
-//		entry3,
-//	}
-//
-//	entry1Str := fmt.Sprintf("%s : %v", entry1.Date.Format(ShortDateFormat), entry1.Amount)
-//	entry2Str := fmt.Sprintf("%s : %v", entry2.Date.Format(ShortDateFormat), entry2.Amount)
-//	entry3Str := fmt.Sprintf("%s : %v", entry3.Date.Format(ShortDateFormat), entry3.Amount)
-//
-//	indentString := " "
-//	indentLevel := 2
-//	prefix := strings.Repeat(indentString, indentLevel)
-//
-//	expected := fmt.Sprintf("%s%s\n%s%s\n%s%s\n", prefix, entry1Str, prefix, entry2Str, prefix, entry3Str)
-//	builder := strings.Builder{}
-//
-//	entries.Print(&builder, indentString, indentLevel)
-//
-//	assert.Equal(
-//		t,
-//		expected,
-//		builder.String(),
-//	)
-//}
-
-//func TestEntriesPrintSortedByDateDescending(t *testing.T) {
-//	today := time.Now()
-//	entry1 := &Entry{Date: today, Amount: 1 * time.Nanosecond}
-//	entry2 := &Entry{Date: today.Add(24 * time.Hour), Amount: 2 * time.Nanosecond}
-//	entry3 := &Entry{Date: today.Add(48 * time.Hour), Amount: 3 * time.Nanosecond}
-//	entries := Entries{
-//		entry1,
-//		entry2,
-//		entry3,
-//	}
-//
-//	entry1Str := fmt.Sprintf("%s : %v", entry1.Date.Format(ShortDateFormat), entry1.Amount)
-//	entry2Str := fmt.Sprintf("%s : %v", entry2.Date.Format(ShortDateFormat), entry2.Amount)
-//	entry3Str := fmt.Sprintf("%s : %v", entry3.Date.Format(ShortDateFormat), entry3.Amount)
-//
-//	indentString := " "
-//	indentLevel := 2
-//	prefix := strings.Repeat(indentString, indentLevel)
-//
-//	expected := fmt.Sprintf("%s%s\n%s%s\n%s%s\n", prefix, entry3Str, prefix, entry2Str, prefix, entry1Str)
-//	builder := strings.Builder{}
-//
-//	entries.PrintSorted(&builder, indentString, indentLevel, EntrySortByDateDescending)
-//
-//	assert.Equal(
-//		t,
-//		expected,
-//		builder.String(),
-//	)
-//}

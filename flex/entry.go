@@ -129,27 +129,6 @@ func (entries Entries) Len() int {
 	return len(entries)
 }
 
-// Print will print the content of the Entry formatted to the given writer
-//func (entry Entry) Print(writer io.Writer) {
-//	fmt.Fprintf(writer, "%s : %v", entry.Date.Format(ShortDateFormat), entry.Amount)
-//}
-
-// PrintSorted first sorts the Entries according to the given criteria, then calls Print with the given parameters
-//func (entries Entries) PrintSorted(writer io.Writer, indentString string, indentLevel int, sortOrder EntrySortOrder) {
-//	entries.Sort(sortOrder)
-//	entries.Print(writer, indentString, indentLevel)
-//}
-
-// Print prints each Entry in the Entries slice to the given writer, prefixed by indentString * indentLevel
-//func (entries Entries) Print(writer io.Writer, indentString string, indentLevel int) {
-//	prefix := strings.Repeat(indentString, indentLevel)
-//	for _, entry := range entries {
-//		fmt.Fprintf(writer, "%s", prefix)
-//		entry.Print(writer)
-//		fmt.Fprint(writer, "\n")
-//	}
-//}
-
 // Sort will sort the Entries slice according to the given criteria
 func (entries Entries) Sort(sortOrder EntrySortOrder) {
 	switch sortOrder {
