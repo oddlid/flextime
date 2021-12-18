@@ -8,8 +8,8 @@ import (
 )
 
 type Customer struct {
-	Name    string  `json:"customer_name"`
-	Entries Entries `json:"flex_entries"`
+	Name    string  `json:"customer_name,omitempty"`
+	Entries Entries `json:"flex_entries,omitempty"`
 }
 
 type Customers []*Customer

@@ -7,8 +7,9 @@ import (
 
 // An Entry is the unit for recording flex time +/- for a given date
 type Entry struct {
-	Date   time.Time     `json:"date"`
-	Amount time.Duration `json:"amount"`
+	Date    time.Time     `json:"date,omitempty"`
+	Amount  time.Duration `json:"amount,omitempty"`
+	Comment string        `json:"comment,omitempty"`
 }
 
 type Entries []*Entry
