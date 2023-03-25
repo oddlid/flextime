@@ -115,12 +115,12 @@ func main() {
 						Usage:   "The customer `name` for whom to add flex",
 					},
 					&cli.TimestampFlag{
-						Name:        "date",
-						Aliases:     []string{"d"},
-						Usage:       "Date (`YYYY-MM-DD`) to add flex for",
-						Layout:      flex.ShortDateFormat,
-						Value:       cli.NewTimestamp(time.Now()),
-						DefaultText: time.Now().Format(flex.ShortDateFormat),
+						Name:    "date",
+						Aliases: []string{"d"},
+						Usage:   "Date (`YYYY-MM-DD`) to add flex for",
+						Layout:  flex.ShortDateFormat,
+						// Value:       cli.NewTimestamp(time.Now()),
+						// DefaultText: time.Now().Format(flex.ShortDateFormat),
 					},
 					&cli.DurationFlag{
 						Name:    "amount",

@@ -50,17 +50,20 @@ func entryPointAdd(c *cli.Context) error {
 	amount := c.Duration("amount")
 	overwrite := c.Bool("overwrite")
 
+	fmtDate := func(t *time.Time) string {
+		if t == nil {
+			return "<nil>"
+		}
+		return t.Format(flex.ShortDateFormat)
+	}
+
 	log.Debug().
 		Str("file", fileName).
 		Str("CustomerName", customerName).
-		Str("Date", date.Format(flex.ShortDateFormat)).
+		Str("Date", fmtDate(date)).
 		Dur("Amount", amount).
 		Bool("Overwrite", overwrite).
 		Send()
-
-	if amount == time.Duration(0) {
-		return fmt.Errorf("refusing to add entry with 0 flex amount")
-	}
 
 	db, err := openDB(fileName)
 	if err != nil {
@@ -70,9 +73,19 @@ func entryPointAdd(c *cli.Context) error {
 		log.Error().Err(err).Send()
 	}
 
-	err = db.SetFlexForCustomer(customerName, *date, amount, overwrite)
-	if err != nil {
-		return err
+	if date == nil && customerName != "" {
+		_, err := db.AddCustomer(customerName)
+		if err != nil {
+			return err
+		}
+	} else {
+		if amount == time.Duration(0) {
+			return fmt.Errorf("refusing to add entry with 0 flex amount")
+		}
+		err = db.SetFlexForCustomer(customerName, *date, amount, overwrite)
+		if err != nil {
+			return err
+		}
 	}
 
 	err = saveDB(db)

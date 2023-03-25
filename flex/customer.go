@@ -59,6 +59,28 @@ func (customers Customers) Len() int {
 	return len(customers)
 }
 
+func (customers Customers) IndexOf(customer Customer) int {
+	for idx := range customers {
+		if strings.EqualFold(customer.Name, customers[idx].Name) {
+			return idx
+		}
+	}
+	return -1
+}
+
+func (customers *Customers) Delete(customer Customer) bool {
+	idx := customers.IndexOf(customer)
+	if idx < 0 {
+		return false
+	}
+	// use slow delete, preserving order
+	copy((*customers)[idx:], (*customers)[idx+1:])
+	(*customers)[len(*customers)-1] = nil
+	*customers = (*customers)[:len(*customers)-1]
+
+	return true
+}
+
 func (customersByName CustomersByName) Len() int {
 	return len(customersByName)
 }

@@ -37,60 +37,8 @@ func entryPointDelete(c *cli.Context) error {
 		}
 	}
 
-	// TODO: Implement delete for a whole customer
-	if customer != nil && date != nil {
-		// delete specific date from specific customer
-		//log.Debug().
-		//	Str("customer_name", customer.Name).
-		//	Time("date", *date).
-		//	Msg("Delete entry with given date for given customer")
-		if err := deleteSpecificDateFromCustomer(customer, *date); err != nil {
-			return err
-		}
-	} else if customer != nil && all {
-		// delete all entries from specific customer
-		// log.Debug().
-		// 	Str("customer_name", customer.Name).
-		// 	Bool("all", all).
-		// 	Msg("Delete all entries for given customer")
-		if err := deleteAllEntriesFromCustomer(customer); err != nil {
-			return err
-		}
-	} else if customer != nil && (from != nil || to != nil) {
-		// delete date range from specific customer
-		// log.Debug().
-		// 	Str("customer_name", customer.Name).
-		// 	Msg("Delete entries matching date range for given customer")
-		if err := deleteDateRangeFromCustomer(customer, from, to); err != nil {
-			return err
-		}
-	} else if all && customer == nil && date == nil && from == nil && to == nil {
-		// delete all entries from all customers
-		// log.Debug().
-		// 	Bool("all", all).
-		// 	Msg("Delete all entries from all customers!")
-		if err := deleteAllEntriesFromAllCustomers(db); err != nil {
-			return err
-		}
-	} else if all && customer == nil && date != nil && from == nil && to == nil {
-		// delete specific date from all customers
-		// log.Debug().
-		// 	Bool("all", all).
-		// 	Time("date", *date).
-		// 	Msg("Delete specific date from all customers")
-		if err := deleteSpecificDateFromAllCustomers(db, *date); err != nil {
-			return err
-		}
-	} else if all && customer == nil && date == nil && (from != nil || to != nil) {
-		// delete date range from all customers
-		// log.Debug().
-		// 	Bool("all", all).
-		// 	Msg("Delete date range from all customers")
-		if err := deleteDateRangeFromAllCustomers(db, from, to); err != nil {
-			return err
-		}
-	} else {
-		return fmt.Errorf("invalid combination of options for delete")
+	if err := dispatchDeleteAction(all, db, customer, date, from, to); err != nil {
+		return err
 	}
 
 	err = saveDB(db)
@@ -126,50 +74,52 @@ func dispatchDeleteAction(all bool, db *flex.DB, customer *flex.Customer, date, 
 			Msg(msg)
 	}
 
-	switch customer {
-	case nil:
-		switch all {
-		case true:
-			switch date {
-			case nil:
-				if from != nil || to != nil {
-					localLog("delete date range from all customers")
-					// return deleteDateRangeFromAllCustomers(db, from, to)
-				}
-				localLog("delete all entries from all customers")
-				// return deleteAllEntriesFromAllCustomers(db)
-			default: // date is set
-				localLog("delete specific date from all customers")
-				// return deleteSpecificDateFromAllCustomers(db, *date)
-			}
-		default: // all is false / not set
-			switch date {
-			case nil:
-			default: // date is set
-			}
+	switch all {
+	case true:
+		switch {
+		case customer == nil && date == nil && from == nil && to == nil:
+			localLog("delete all entries from all customers")
+			return deleteAllEntriesFromAllCustomers(db)
+		case customer == nil && date == nil && (from != nil || to != nil):
+			localLog("delete date range from all customers")
+			return deleteDateRangeFromAllCustomers(db, from, to)
+		case customer == nil && date != nil && from == nil && to == nil:
+			localLog("delete specific date from all customers")
+			return deleteSpecificDateFromAllCustomers(db, *date)
+		case customer != nil && date == nil && from == nil && to == nil:
+			localLog("delete all entries from specific customer")
+			return deleteAllEntriesFromCustomer(customer)
+		default:
+			localLog("Invalid option combination")
 		}
-	default: // customer is set
-		switch all {
-		case true:
-			switch date {
-			case nil:
-				localLog("delete all entries from specific customer")
-				// return deleteAllEntriesFromCustomer(customer)
-			default:
-			}
-		default: // all is false / not set
-			switch date {
-			case nil:
-				if from != nil || to != nil {
-					localLog("delete date range from specific customer")
-					// return deleteDateRangeFromCustomer(customer, from, to)
-				}
-				localLog("delete customer itself")
-			default: // date is set
-				localLog("delete specific date from specific customer")
-				// return deleteSpecificDateFromCustomer(customer, *date)
-			}
+	case false:
+		switch {
+		case customer != nil && date != nil && from == nil && to == nil:
+			localLog("delete specific date from specific customer")
+			return deleteSpecificDateFromCustomer(customer, *date)
+		case customer != nil && date == nil && (from != nil || to != nil):
+			localLog("delete date range from specific customer")
+			return deleteDateRangeFromCustomer(customer, from, to)
+		case customer != nil && date == nil && from == nil && to == nil:
+			localLog("delete customer itself")
+			return deleteCustomer(db, customer)
+		default:
+			localLog("Invalid option combination")
 		}
+	}
+
+	return ErrInvalidOptionCombination
+}
+
+func deleteCustomer(db *flex.DB, customer *flex.Customer) error {
+	if db == nil || db.IsEmpty() {
+		return flex.ErrEmptyDB
+	}
+	if customer == nil {
+		return flex.ErrNilCustomer
+	}
+	if !db.Customers.Delete(*customer) {
+		return flex.ErrNoSuchCustomer
 	}
 	return nil
 }

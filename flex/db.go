@@ -107,10 +107,11 @@ func (db *DB) SetFlexForCustomer(customerName string, date time.Time, amount tim
 	}
 	if !customer.SetEntry(Entry{Date: date, Amount: amount}, overwrite) {
 		return fmt.Errorf(
-			"failed to add %v flex on %s for customer: %s",
+			"failed to add %v flex on %s for customer: %s (overwrite: %t)",
 			amount,
 			date.Format(ShortDateFormat),
 			customer.Name,
+			overwrite,
 		)
 	}
 	return nil

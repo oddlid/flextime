@@ -193,3 +193,37 @@ func TestCustomersLongestName(t *testing.T) {
 	}
 	assert.Equal(t, 5, customers.LongestName())
 }
+
+func TestCustomersIndexOf(t *testing.T) {
+	customers := Customers{
+		{Name: "Customer1"},
+		{Name: "Customer2"},
+		{Name: "Customer3"},
+	}
+
+	assert.Equal(t, 1, customers.IndexOf(*customers[1]))
+	assert.Equal(t, -1, customers.IndexOf(Customer{Name: "NoSuchCustomer"}))
+}
+
+func TestCustomersDeleteExpectFalse(t *testing.T) {
+	customers := Customers{
+		{Name: "Customer1"},
+		{Name: "Customer2"},
+		{Name: "Customer3"},
+	}
+	customerNotInList := Customer{Name: "CustomerNotInList"}
+
+	assert.False(t, customers.Delete(customerNotInList))
+	assert.Equal(t, 3, len(customers))
+}
+
+func TestCustomersDeleteExpectTrue(t *testing.T) {
+	customers := Customers{
+		{Name: "Customer1"},
+		{Name: "Customer2"},
+		{Name: "Customer3"},
+	}
+
+	assert.True(t, customers.Delete(*customers[1]))
+	assert.Equal(t, 2, len(customers))
+}
